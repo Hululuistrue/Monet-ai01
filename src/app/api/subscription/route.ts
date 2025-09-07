@@ -4,6 +4,9 @@ import { getSupabaseAdmin } from '@/lib/supabase'
 import { sharedSubscriptionStore } from '@/lib/shared-subscription-store'
 import Stripe from 'stripe'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
 })

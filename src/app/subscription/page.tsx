@@ -3,7 +3,7 @@
 // Force dynamic rendering to avoid prerendering issues
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, User, LogOut, History, Settings } from 'lucide-react'
@@ -12,7 +12,7 @@ import SubscriptionManager from '@/components/SubscriptionManager'
 import PaymentHistory from '@/components/PaymentHistory'
 import { User as SupabaseUser } from '@supabase/supabase-js'
 
-export default function SubscriptionPage() {
+function SubscriptionContent() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [activeTab, setActiveTab] = useState<'plans' | 'history'>('plans')
   const [loading, setLoading] = useState(true)
@@ -191,5 +191,23 @@ export default function SubscriptionPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SubscriptionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-pink-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <Settings className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading...</h2>
+          <p className="text-gray-600">Please wait while we load your subscription details.</p>
+        </div>
+      </div>
+    }>
+      <SubscriptionContent />
+    </Suspense>
   )
 }

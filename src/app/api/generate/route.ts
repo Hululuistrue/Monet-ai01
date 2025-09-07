@@ -5,6 +5,9 @@ import { validatePrompt, generateId } from '@/utils/helpers'
 import { isRateLimited, incrementRateLimit, getGuestLimits } from '@/utils/rateLimit'
 import { GenerationRequest } from '@/types'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 // Function to create a placeholder image using a more reliable service
 function generatePlaceholderImage(prompt: string, size: string = '1024x1024') {
   const seed = prompt.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
