@@ -7,9 +7,16 @@ import Stripe from 'stripe'
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-})
+// Lazy initialization to avoid build-time errors
+function getStripeClient() {
+  const apiKey = process.env.STRIPE_SECRET_KEY
+  if (!apiKey) {
+    throw new Error('STRIPE_SECRET_KEY environment variable is not set')
+  }
+  return new Stripe(apiKey, {
+    apiVersion: '2025-08-27.basil',
+  })
+}
 
 // Static subscription plan data (consistent with plans API)
 const SUBSCRIPTION_PLANS = [
@@ -258,6 +265,8 @@ export async function POST(request: NextRequest) {
   console.log('POST /api/subscription called')
   
   try {
+    const stripe = getStripeClient()
+    
     const authHeader = request.headers.get('authorization')
     const body = await request.json()
     console.log('Request body:', body)

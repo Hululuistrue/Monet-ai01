@@ -1,9 +1,18 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!)
+// Lazy initialization to avoid build-time errors
+function getGeminiClient() {
+  const apiKey = process.env.GOOGLE_AI_API_KEY
+  if (!apiKey) {
+    throw new Error('GOOGLE_AI_API_KEY environment variable is not set')
+  }
+  return new GoogleGenerativeAI(apiKey)
+}
 
 export async function generateImage(prompt: string) {
   try {
+    const genAI = getGeminiClient()
+    
     // Use Gemini 2.0 Flash experimental model for native image generation
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash-exp',

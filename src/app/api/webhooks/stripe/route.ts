@@ -4,14 +4,30 @@ import { supabase } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { sharedSubscriptionStore } from '@/lib/shared-subscription-store'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-})
+// Lazy initialization to avoid build-time errors
+function getStripeClient() {
+  const apiKey = process.env.STRIPE_SECRET_KEY
+  if (!apiKey) {
+    throw new Error('STRIPE_SECRET_KEY environment variable is not set')
+  }
+  return new Stripe(apiKey, {
+    apiVersion: '2025-08-27.basil',
+  })
+}
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+function getWebhookSecret() {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!secret) {
+    throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set')
+  }
+  return secret
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const stripe = getStripeClient()
+    const webhookSecret = getWebhookSecret()
+    
     const body = await request.text()
     const sig = request.headers.get('stripe-signature')!
 
@@ -106,6 +122,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
+    const stripe = getStripeClient()
     const supabaseAdmin = getSupabaseAdmin()
     
     if (invoice.customer && (invoice as any).subscription) {
@@ -149,6 +166,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  const stripe = getStripeClient()
   const userId = session.metadata?.user_id
   const planName = session.metadata?.plan_name
 
@@ -268,6 +286,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
+    const stripe = getStripeClient()
     const supabaseAdmin = getSupabaseAdmin()
     
     // 从 Stripe 获取客户信息
@@ -296,6 +315,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   try {
+    const stripe = getStripeClient()
     const supabaseAdmin = getSupabaseAdmin()
     
     // 从 Stripe 获取客户信息
