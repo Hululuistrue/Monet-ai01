@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
       }, { status: 400 }) // 400 Bad Request
     }
 
-    // Get user info or use IP for rate limiting
+    // Get user info or use headers for rate limiting
     const authHeader = request.headers.get('authorization')
     let userId: string | null = null
-    let identifier = request.ip || 'unknown'
+    let identifier = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
 
     if (authHeader) {
       const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate image(s) using Gemini API - handle batch generation
-    const results = []
+    const results: any[] = []
     
     if (n === 1) {
       // Single image generation
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       if (!result.success) {
         return NextResponse.json({
           success: false,
-          error: result.error || 'Failed to generate image'
+          error: (result as any).error || 'Failed to generate image'
         }, { status: 500 })
       }
       results.push(result)
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         if (result.status === 'fulfilled' && result.value.success) {
           results.push(result.value)
         } else {
-          console.error('Batch generation error:', result.status === 'rejected' ? result.reason : result.value?.error)
+          console.error('Batch generation error:', result.status === 'rejected' ? result.reason : (result.value as any)?.error)
           // Add a failed result with placeholder
           results.push({
             success: true,

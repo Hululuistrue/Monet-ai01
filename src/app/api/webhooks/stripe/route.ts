@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase'
 import { sharedSubscriptionStore } from '@/lib/shared-subscription-store'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-08-27.basil',
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -88,13 +88,13 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
           user_id: userId,
           subscription_id: userSubscription?.id,
           stripe_payment_intent_id: paymentIntent.id,
-          stripe_charge_id: paymentIntent.charges.data[0]?.id,
+          stripe_charge_id: (paymentIntent as any).charges?.data[0]?.id,
           amount: paymentIntent.amount,
           currency: paymentIntent.currency,
           status: 'succeeded',
-          payment_method: paymentIntent.charges.data[0]?.payment_method_details?.type || 'card',
+          payment_method: (paymentIntent as any).charges?.data[0]?.payment_method_details?.type || 'card',
           description: paymentIntent.description || `Payment for subscription`,
-          receipt_url: paymentIntent.charges.data[0]?.receipt_url
+          receipt_url: (paymentIntent as any).charges?.data[0]?.receipt_url
         })
       
       console.log(`[Webhook] Payment history created for user: ${userId}`)
@@ -108,10 +108,10 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
     const supabaseAdmin = getSupabaseAdmin()
     
-    if (invoice.customer && invoice.subscription) {
+    if (invoice.customer && (invoice as any).subscription) {
       // 从 Stripe 获取客户信息
       const customer = await stripe.customers.retrieve(invoice.customer as string)
-      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
+      const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string)
       
       if ('metadata' in customer && customer.metadata?.user_id) {
         const userId = customer.metadata.user_id
@@ -130,8 +130,8 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
           .insert({
             user_id: userId,
             subscription_id: userSubscription?.id,
-            stripe_payment_intent_id: invoice.payment_intent as string,
-            stripe_charge_id: invoice.charge as string,
+            stripe_payment_intent_id: (invoice as any).payment_intent as string,
+            stripe_charge_id: (invoice as any).charge as string,
             amount: invoice.amount_paid,
             currency: invoice.currency,
             status: 'succeeded',
@@ -233,13 +233,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           user_id: userId,
           subscription_id: userSubscriptionId,
           stripe_payment_intent_id: paymentIntent.id,
-          stripe_charge_id: paymentIntent.charges.data[0]?.id,
+          stripe_charge_id: (paymentIntent as any).charges?.data[0]?.id,
           amount: session.amount_total || plan.price,
           currency: session.currency || 'usd',
           status: 'succeeded',
-          payment_method: paymentIntent.charges.data[0]?.payment_method_details?.type || 'card',
+          payment_method: (paymentIntent as any).charges?.data[0]?.payment_method_details?.type || 'card',
           description: `Upgrade to ${plan.display_name}`,
-          receipt_url: paymentIntent.charges.data[0]?.receipt_url,
+          receipt_url: (paymentIntent as any).charges?.data[0]?.receipt_url,
           // 存储历史计划信息，确保支付历史显示正确的计划名称
           plan_name: planName,
           plan_display_name: plan.display_name,
@@ -282,8 +282,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         .update({
           status: subscription.status,
           cancel_at_period_end: subscription.cancel_at_period_end,
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
+          current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
         })
         .eq('subscription_id', subscription.id)
       

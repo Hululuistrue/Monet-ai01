@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
     }
 
     // 检查各个表的状态
-    const results = {
+    const results: {
+      user_id: string
+      tables: Record<string, any>
+      [key: string]: any // 允许动态属性
+    } = {
       user_id: user.id,
       tables: {}
     }
@@ -97,7 +101,7 @@ export async function GET(request: NextRequest) {
         .select()
       
       results.table_structure = tableInfo
-    } catch (e) {
+    } catch {
       // 如果RPC不存在，尝试直接查询信息模式
       try {
         const { data: columns } = await supabaseAdmin

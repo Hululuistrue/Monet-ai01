@@ -217,7 +217,7 @@ export default function ResetPasswordPage() {
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={loading || success}
+                    disabled={loading || !!success}
                     className={cn(
                       "group relative w-full py-4 px-8 rounded-2xl font-bold text-lg text-white transition-all duration-300 overflow-hidden",
                       "bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600",

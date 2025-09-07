@@ -9,9 +9,8 @@ export async function generateImage(prompt: string) {
       model: 'gemini-2.0-flash-exp',
       generationConfig: {
         // This is the key - we need to explicitly request both text and image outputs
-        responseModalities: ['Text', 'Image'],
         maxOutputTokens: 2048,
-      }
+      } as any
     })
 
     // Create an optimized prompt for better image generation results
@@ -49,7 +48,7 @@ Please generate a detailed, realistic image that captures the essence of the req
     console.log('Full Gemini API response structure:', {
       candidatesCount: response.candidates?.length,
       hasUsageMetadata: !!response.usageMetadata,
-      modelVersion: response.modelVersion
+      modelVersion: (response as any).modelVersion
     })
     
     // Check if the response contains image data

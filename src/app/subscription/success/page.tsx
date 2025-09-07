@@ -1,5 +1,8 @@
 'use client'
 
+// Force dynamic rendering to avoid prerendering issues
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, Loader2, ArrowRight, Crown } from 'lucide-react'
@@ -99,14 +102,13 @@ export default function SubscriptionSuccessPage() {
               subscription_id: 'dev_' + Date.now(),
               plan: mockPlan,
               status: 'active',
-              current_period_end: null,
               usage: {
                 daily_used: 0,
                 daily_remaining: mockPlan.daily_generations,
                 hourly_used: 0,
                 hourly_remaining: 20
               }
-            })
+            } as any)
             setLoading(false)
             return
           }
