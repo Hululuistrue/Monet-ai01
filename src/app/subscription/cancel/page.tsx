@@ -44,7 +44,7 @@ export default function SubscriptionCancelPage() {
             </span>
           </div>
           <p className="text-xs text-amber-700">
-            You'll be automatically redirected to the subscription page.
+            You&apos;ll be automatically redirected to the subscription page.
           </p>
         </div>
 

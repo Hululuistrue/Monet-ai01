@@ -68,11 +68,11 @@ export async function GET(request: NextRequest) {
     }
 
     // 如果有数据，尝试获取订阅信息
-    let paymentsWithPlans = payments
+    const paymentsWithPlans = payments
     if (payments && payments.length > 0) {
       console.log('Attempting to fetch subscription details...')
       
-      for (let payment of payments) {
+      for (const payment of payments) {
         if (payment.subscription_id) {
           const { data: subscription } = await supabaseAdmin
             .from('user_subscriptions')

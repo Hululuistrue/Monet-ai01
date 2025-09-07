@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
 // 简单的内存存储用于开发环境
-const subscriptionStore = new Map<string, any>()
+interface SubscriptionData {
+  userId: string
+  planName: string
+  status: string
+  subscribedAt: string
+  sessionId?: string
+}
+
+const subscriptionStore = new Map<string, SubscriptionData>()
 
 // 静态订阅计划数据
 const SUBSCRIPTION_PLANS = [

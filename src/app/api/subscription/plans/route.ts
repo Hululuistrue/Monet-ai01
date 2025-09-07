@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 // 静态订阅计划数据
 const SUBSCRIPTION_PLANS = [

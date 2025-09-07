@@ -13,7 +13,17 @@ export default function SubscriptionSuccessPage() {
   const planName = searchParams.get('plan') // 从URL获取计划名称
   
   const [loading, setLoading] = useState(true)
-  const [subscription, setSubscription] = useState<any>(null)
+  const [subscription, setSubscription] = useState<{
+    subscription_id: string
+    plan: {
+      id: string
+      name: string
+      display_name: string
+      daily_generations: number
+      max_batch_size: number
+    }
+    status: string
+  } | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
