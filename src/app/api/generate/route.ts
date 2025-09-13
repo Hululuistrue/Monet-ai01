@@ -127,7 +127,9 @@ export async function POST(request: NextRequest) {
       url: result.data.imageUrl,
       thumbnail: result.data.thumbnailUrl,
       size,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      source: result.data.source,
+      notice: result.data.notice
     }))
 
     // Save to database if user is authenticated

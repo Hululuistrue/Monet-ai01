@@ -13,6 +13,7 @@ export default function ImageGenerator() {
   const [loading, setLoading] = useState(false)
   const [generatedImages, setGeneratedImages] = useState<Array<{id: string, url: string, thumbnail: string}>>([])
   const [error, setError] = useState<string | null>(null)
+  const [generationInfo, setGenerationInfo] = useState<{source?: string, notice?: string} | null>(null)
   const [user, setUser] = useState<any>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [credits, setCredits] = useState<any>(null)
@@ -77,6 +78,7 @@ export default function ImageGenerator() {
     
     setLoading(true)
     setError(null)
+    setGenerationInfo(null)
     
     try {
       const headers: any = {
@@ -107,6 +109,27 @@ export default function ImageGenerator() {
           url: img.url,
           thumbnail: img.thumbnail || img.url
         })))
+        
+        // Set generation info if available (for AI-description based images)
+        if (result.data.images.length > 0 && result.data.images[0].source) {
+          const source = result.data.images[0].source
+          if (source === 'gemini-description-svg') {
+            setGenerationInfo({
+              source: 'ai-description',
+              notice: 'Generated visual representation based on AI description'
+            })
+          } else if (source?.includes('fallback')) {
+            setGenerationInfo({
+              source: 'fallback',
+              notice: 'Using enhanced visual placeholder'
+            })
+          } else {
+            setGenerationInfo(null)
+          }
+        } else {
+          setGenerationInfo(null)
+        }
+        
         if (authToken) {
           await fetchCredits(authToken)
         }
@@ -423,6 +446,30 @@ export default function ImageGenerator() {
                   </button>
                 )}
               </div>
+              
+              {/* Generation Info Notice */}
+              {generationInfo && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 mb-1">
+                        {generationInfo.source === 'ai-description' ? '🎨 AI-Enhanced Visual' : '✨ Enhanced Placeholder'}
+                      </h4>
+                      <p className="text-blue-800 text-sm">
+                        {generationInfo.notice}
+                        {generationInfo.source === 'ai-description' && (
+                          <span className="block mt-1 text-blue-600">
+                            Our AI analyzed your prompt and created this visual representation with enhanced styling.
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className={`${generatedImages.length > 1 ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : ''}`}>
                 {generatedImages.map((image, index) => (

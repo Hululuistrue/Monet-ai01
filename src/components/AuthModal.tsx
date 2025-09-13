@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User, Mail, Lock, LogIn, UserPlus } from 'lucide-react'
+import { getSiteUrl } from '@/utils/site-url'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -41,6 +42,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${getSiteUrl()}/auth/callback`
+          }
         })
         
         if (error) throw error

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, Sparkles, CheckCircle } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
+import { getSiteUrl } from '@/utils/site-url'
 
 export default function AuthPage() {
   const router = useRouter()
@@ -118,7 +119,8 @@ export default function AuthPage() {
           options: {
             data: {
               full_name: formData.fullName
-            }
+            },
+            emailRedirectTo: `${getSiteUrl()}/auth/callback`
           }
         })
 
@@ -151,7 +153,7 @@ export default function AuthPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
+        redirectTo: `${getSiteUrl()}/auth/reset-password`
       })
 
       if (error) throw error
@@ -175,7 +177,7 @@ export default function AuthPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${getSiteUrl()}/auth/callback`
         }
       })
       if (error) throw error

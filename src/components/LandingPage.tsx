@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Sparkles, Zap, Shield, Users, Download, Share2, Palette, Globe, Check, Star, User, LogOut } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
-import AuthModal from './AuthModal'
 import UserMenuDropdown from './UserMenuDropdown'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -149,11 +149,15 @@ const examples = [
 ]
 
 export default function LandingPage() {
+  const router = useRouter()
   const [activeExample, setActiveExample] = useState(0)
   const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    // 标记为客户端，防止 hydration 问题
+    setIsClient(true)
+    
     // Check current auth status
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -170,14 +174,16 @@ export default function LandingPage() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Auto-rotate examples every 4 seconds
+  // Auto-rotate examples every 4 seconds (只在客户端)
   useEffect(() => {
+    if (!isClient) return
+    
     const interval = setInterval(() => {
       setActiveExample((prev) => (prev + 1) % examples.length)
     }, 4000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [isClient])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -186,7 +192,7 @@ export default function LandingPage() {
   const handlePlanSelect = (planName: string) => {
     if (planName === 'Free Trial') {
       // Free plan goes directly to generation page
-      window.location.href = '/generate'
+      router.push('/generate')
       return
     }
 
@@ -200,7 +206,7 @@ export default function LandingPage() {
       
       const planSlug = planMapping[planName]
       const redirectUrl = `/subscription?plan=${planSlug}`
-      window.location.href = `/auth/login?redirect=${encodeURIComponent(redirectUrl)}&plan=${planSlug}`
+      router.push(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}&plan=${planSlug}`)
       return
     }
 
@@ -212,7 +218,7 @@ export default function LandingPage() {
     
     const planSlug = planMapping[planName]
     if (planSlug) {
-      window.location.href = `/subscription?plan=${planSlug}`
+      router.push(`/subscription?plan=${planSlug}`)
     }
   }
 
@@ -243,13 +249,13 @@ export default function LandingPage() {
                   <span>Sign Out</span>
                 </button>
               ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
+                <Link
+                  href="/auth/login"
                   className="flex items-center space-x-1 px-3 py-2 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition-colors"
                 >
                   <User className="w-4 h-4" />
                   <span>Sign In</span>
-                </button>
+                </Link>
               )}
             </div>
             
@@ -277,12 +283,12 @@ export default function LandingPage() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => setShowAuthModal(true)}
+                  <Link
+                    href="/auth/login"
                     className="text-gray-600 hover:text-purple-600 transition-all duration-300 font-medium"
                   >
                     Sign In
-                  </button>
+                  </Link>
                   <Link 
                     href="/generate" 
                     className="relative group bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 overflow-hidden"
@@ -357,8 +363,12 @@ export default function LandingPage() {
               
               <button 
                 onClick={() => {
-                  const exampleSection = document.getElementById('examples-section');
-                  exampleSection?.scrollIntoView({ behavior: 'smooth' });
+                  if (typeof document !== 'undefined') {
+                    const exampleSection = document.getElementById('examples-section');
+                    if (exampleSection) {
+                      exampleSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
                 }}
                 className="group border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-all duration-300 transform hover:scale-105"
               >
@@ -532,10 +542,10 @@ export default function LandingPage() {
                       </span>
                     </div>
                     <p className="text-2xl font-bold mb-2">"{examples[activeExample].prompt}"</p>
-                    <p className="text-sm text-gray-300 flex items-center">
+                    <div className="text-sm text-gray-300 flex items-center">
                       <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                       Generated in 3.2 seconds
-                    </p>
+                    </div>
                   </div>
                   
                   {/* Quality badge */}
@@ -1127,7 +1137,11 @@ export default function LandingPage() {
               
               {/* Back to top */}
               <button 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
                 className="group flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-6 py-3 rounded-full transition-all duration-300 border border-gray-700 hover:border-purple-500"
               >
                 <span className="text-sm font-medium">Back to top</span>
@@ -1144,15 +1158,6 @@ export default function LandingPage() {
         <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-r from-indigo-600/10 to-blue-600/10 rounded-full blur-2xl"></div>
       </footer>
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={(user) => {
-          setUser(user)
-          setShowAuthModal(false)
-        }}
-      />
     </div>
   )
 }
