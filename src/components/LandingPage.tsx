@@ -1126,7 +1126,7 @@ export default function LandingPage() {
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="flex items-center space-x-8">
                 <p className="text-gray-400">
-                  &copy; 2024 Monet-AI Image Generator. All rights reserved.
+                  &copy; 2025 Monet-AI Image Generator. All rights reserved.
                 </p>
                 <div className="hidden md:flex items-center space-x-2 text-sm text-gray-500">
                   <span>Made with</span>
