@@ -1095,30 +1095,6 @@ export default function LandingPage() {
               </ul>
             </div>
             
-            {/* Legal links */}
-            <div>
-              <h4 className="font-bold text-white mb-6 text-lg">Legal</h4>
-              <ul className="space-y-4">
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors duration-300 flex items-center group">
-                    <ArrowRight className="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors duration-300 flex items-center group">
-                    <ArrowRight className="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors duration-300 flex items-center group">
-                    <ArrowRight className="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Copyright
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
           
           {/* Bottom bar */}
