@@ -1,155 +1,298 @@
-# Stripe支付集成配置指南
+# Stripe 配置完整指南
 
-## 🚀 快速开始
+## 🎯 概述
 
-您的用户购买功能已经基本完成！现在需要配置Stripe来启用支付功能。
+本指南将帮你完整配置Stripe付费系统，包括创建产品、设置Webhook、测试支付等。
 
-## 📋 必需的Stripe配置
+## 📋 当前状态分析
 
-### 1. 创建Stripe账户
-1. 访问 [Stripe Dashboard](https://dashboard.stripe.com/)
-2. 注册或登录您的账户
-3. 完成账户验证（对于生产环境必需）
+### ✅ 已有的配置
+- Stripe API密钥已配置 (测试环境)
+- 订阅计划已在代码中定义
+- Webhook处理逻辑已完成
+- 支付流程代码已实现
 
-### 2. 获取API密钥
-在Stripe Dashboard中：
+### ⚠️ 需要配置的部分
+- Stripe Dashboard中的产品和价格
+- Webhook端点设置
+- 正确的Webhook Secret
+- Supabase数据库表结构
 
-#### 测试环境密钥（开发用）：
+## 🚀 步骤1: Stripe Dashboard 设置
+
+### 1.1 登录Stripe Dashboard
+访问: https://dashboard.stripe.com/
+使用你的Stripe账户登录
+
+### 1.2 创建产品和价格
+
+#### 创建Basic计划产品:
+1. 进入 **Products** → **Add product**
+2. 设置产品信息:
+   - **Name**: `Basic Plan`
+   - **Description**: `Enhanced AI image generation with 100 daily generations`
+   - **Image**: 可选上传产品图片
+
+3. 设置价格:
+   - **Price**: `$9.99`
+   - **Currency**: `USD`
+   - **Billing period**: `Monthly`
+   - **Price ID**: 记录生成的价格ID (例如: `price_xxxxx`)
+
+#### 创建Pro计划产品:
+1. 再次点击 **Add product**
+2. 设置产品信息:
+   - **Name**: `Pro Plan`
+   - **Description**: `Premium AI image generation with 500 daily generations`
+   
+3. 设置价格:
+   - **Price**: `$19.99`
+   - **Currency**: `USD`
+   - **Billing period**: `Monthly`
+   - **Price ID**: 记录生成的价格ID (例如: `price_yyyyy`)
+
+### 1.3 获取API密钥
 1. 进入 **Developers** → **API keys**
-2. 确保选择了 **Test mode**
-3. 复制以下密钥：
-   - **Publishable key** (以 `pk_test_` 开头)
-   - **Secret key** (以 `sk_test_` 开头)
+2. 复制以下密钥:
+   - **Publishable key**: `pk_test_...` (前端使用)
+   - **Secret key**: `sk_test_...` (后端使用)
 
-#### 配置环境变量
-将以下内容添加到您的 `.env.local` 文件：
+## 🔗 步骤2: 配置Webhook
 
-```bash
-# Stripe配置 (测试环境)
-STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+### 2.1 添加Webhook端点
+1. 进入 **Developers** → **Webhooks**
+2. 点击 **Add endpoint**
+3. 设置端点URL:
+   - **开发环境**: `http://localhost:3000/api/webhooks/stripe`
+   - **生产环境**: `https://yourdomain.com/api/webhooks/stripe`
+
+### 2.2 选择事件类型
+选择以下事件:
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_succeeded`
+- `payment_intent.succeeded`
+
+### 2.3 获取Webhook Secret
+创建Webhook后，点击进入详情页面，复制 **Signing secret** (以 `whsec_` 开头)
+
+## 🔧 步骤3: 更新环境变量
+
+编辑 `.env.local` 文件:
+
+```env
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_test_你的实际密钥
+STRIPE_PUBLISHABLE_KEY=pk_test_你的实际密钥
+STRIPE_WEBHOOK_SECRET=whsec_你的实际webhook密钥
+
+# 其他配置保持不变...
 ```
 
-### 3. 设置Webhook端点
-1. 在Stripe Dashboard中，进入 **Developers** → **Webhooks**
-2. 点击 **Add endpoint**
-3. 输入webhook URL：`https://yourdomain.com/api/webhooks/stripe`
-4. 选择以下事件：
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.payment_succeeded`
-   - `invoice.payment_failed`
-5. 保存后，复制 **Signing secret** 并更新环境变量中的 `STRIPE_WEBHOOK_SECRET`
+## 🗄️ 步骤4: Supabase数据库设置
 
-### 4. 创建产品和价格
-在Stripe Dashboard中：
-1. 进入 **Products** 页面
-2. 创建以下产品：
+### 4.1 创建必要的数据库表
 
-#### Basic Plan
-- 名称: "AI Image Generator - Basic"
-- 价格: $9.99/月，recurring
-- 描述: "50 generations per day, batch generation, HD quality"
-
-#### Pro Plan  
-- 名称: "AI Image Generator - Pro"
-- 价格: $19.99/月，recurring
-- 描述: "200 generations per day, priority generation, advanced parameters"
-
-## 🗄️ 数据库设置
-
-### 运行数据库迁移
-确保您的Supabase数据库已经运行了订阅相关的schema：
-
-1. 在Supabase Dashboard中，进入 **SQL Editor**
-2. 运行 `subscription-schema.sql` 文件中的SQL语句
-3. 验证以下表已创建：
-   - `subscription_plans`
-   - `user_subscriptions`  
-   - `payment_history`
-
-### 更新订阅计划数据
-运行以下SQL来插入/更新订阅计划：
+在Supabase SQL编辑器中执行以下SQL:
 
 ```sql
--- 清理现有数据（如果需要）
-DELETE FROM subscription_plans WHERE name IN ('free', 'basic', 'pro');
+-- 创建订阅计划表
+CREATE TABLE IF NOT EXISTS subscription_plans (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  display_name VARCHAR(100) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  currency VARCHAR(3) DEFAULT 'USD',
+  billing_period VARCHAR(20) DEFAULT 'monthly',
+  daily_generations INTEGER NOT NULL,
+  hourly_limit INTEGER NOT NULL,
+  max_batch_size INTEGER NOT NULL,
+  features JSONB,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- 插入最新的订阅计划
-INSERT INTO subscription_plans (name, display_name, price, daily_generations, hourly_limit, max_batch_size, features) VALUES
-('free', 'Free', 0.00, 3, 2, 1, '["Basic generation", "Standard quality", "PNG/JPG download"]'),
-('basic', 'Basic', 9.99, 50, 10, 4, '["Batch generation (2-4)", "HD quality", "All formats", "Favorites", "Priority support"]'),
-('pro', 'Professional', 19.99, 200, 25, 4, '["Priority generation", "Advanced parameters", "API access", "Commercial license", "Dedicated support"]');
+-- 创建用户订阅表
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  plan_id INTEGER REFERENCES subscription_plans(id),
+  subscription_id VARCHAR(255), -- Stripe订阅ID
+  status VARCHAR(50) NOT NULL DEFAULT 'free',
+  cancel_at_period_end BOOLEAN DEFAULT false,
+  current_period_start TIMESTAMP WITH TIME ZONE,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id)
+);
+
+-- 创建支付历史表
+CREATE TABLE IF NOT EXISTS payment_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  subscription_id UUID REFERENCES user_subscriptions(id),
+  stripe_payment_intent_id VARCHAR(255),
+  stripe_charge_id VARCHAR(255),
+  amount INTEGER NOT NULL, -- 以分为单位
+  currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+  status VARCHAR(50) NOT NULL,
+  payment_method VARCHAR(50),
+  description TEXT,
+  receipt_url TEXT,
+  plan_name VARCHAR(50),
+  plan_display_name VARCHAR(100),
+  plan_price DECIMAL(10,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 插入默认订阅计划
+INSERT INTO subscription_plans (name, display_name, price, daily_generations, hourly_limit, max_batch_size, features) 
+VALUES 
+  ('free', 'Free Plan', 0.00, 3, 2, 1, 
+   '["Basic AI image generation", "3 generations per day", "Standard quality", "Community support"]'),
+  ('basic', 'Basic Plan', 9.99, 100, 20, 4, 
+   '["Enhanced AI image generation", "100 generations per day", "High quality output", "Priority support", "Multiple styles available"]'),
+  ('pro', 'Pro Plan', 19.99, 500, 50, 8, 
+   '["Premium AI image generation", "500 generations per day", "Ultra high quality", "Premium support", "All styles and models", "Commercial license", "API access"]')
+ON CONFLICT (name) DO NOTHING;
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status ON user_subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_payment_history_user_id ON payment_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_history_created_at ON payment_history(created_at DESC);
+
+-- 设置RLS (Row Level Security)
+ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_history ENABLE ROW LEVEL SECURITY;
+
+-- 创建RLS策略
+CREATE POLICY "Anyone can read subscription plans" ON subscription_plans FOR SELECT USING (true);
+
+CREATE POLICY "Users can read own subscription" ON user_subscriptions 
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can read own payment history" ON payment_history 
+  FOR SELECT USING (auth.uid() = user_id);
 ```
 
-## 🧪 测试支付流程
+## 🧪 步骤5: 测试配置
 
-### 使用测试卡号
-Stripe提供测试卡号来测试不同场景：
+### 5.1 创建测试脚本
 
-- **成功支付**: `4242 4242 4242 4242`
-- **失败支付**: `4000 0000 0000 0002`
-- **需要验证**: `4000 0025 0000 3155`
+创建 `test-stripe.js`:
 
-任何未来日期和CVC都可以使用。
+```javascript
+const Stripe = require('stripe');
+require('dotenv').config({ path: '.env.local' });
 
-### 测试步骤
-1. 启动应用：`npm run dev`
-2. 访问 `/subscription` 页面
-3. 选择一个付费计划
-4. 使用测试卡号完成支付
-5. 验证：
-   - 支付成功页面显示
-   - Stripe Dashboard中显示支付记录
-   - 数据库中创建了订阅记录
-   - 用户配额正确更新
+async function testStripeConfig() {
+  console.log('🧪 测试Stripe配置...\n');
+  
+  // 检查环境变量
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+  console.log('✅ Secret Key:', secretKey ? secretKey.substring(0, 12) + '...' : '❌ 未设置');
+  console.log('✅ Publishable Key:', publishableKey ? publishableKey.substring(0, 12) + '...' : '❌ 未设置');
+  console.log('✅ Webhook Secret:', webhookSecret ? webhookSecret.substring(0, 12) + '...' : '❌ 未设置');
+  
+  if (!secretKey) {
+    console.error('\n❌ STRIPE_SECRET_KEY 未设置');
+    return;
+  }
+  
+  try {
+    const stripe = new Stripe(secretKey);
+    
+    // 测试API连接
+    const account = await stripe.accounts.retrieve();
+    console.log('\n✅ Stripe账户连接成功');
+    console.log('📧 账户邮箱:', account.email);
+    console.log('🏢 账户类型:', account.type);
+    
+    // 列出产品
+    const products = await stripe.products.list({ limit: 10 });
+    console.log('\n📦 当前产品数量:', products.data.length);
+    
+    products.data.forEach(product => {
+      console.log(`  - ${product.name} (ID: ${product.id})`);
+    });
+    
+    // 列出价格
+    const prices = await stripe.prices.list({ limit: 10 });
+    console.log('\n💰 当前价格数量:', prices.data.length);
+    
+    prices.data.forEach(price => {
+      const amount = price.unit_amount ? (price.unit_amount / 100) : 0;
+      console.log(`  - $${amount} ${price.currency.toUpperCase()} (ID: ${price.id})`);
+    });
+    
+    console.log('\n✅ Stripe配置测试完成');
+    
+  } catch (error) {
+    console.error('\n❌ Stripe测试失败:', error.message);
+  }
+}
 
-## 🚀 生产环境部署
+testStripeConfig();
+```
 
-### 1. 切换到生产模式
-1. 在Stripe Dashboard中切换到 **Live mode**
-2. 获取生产环境的API密钥
-3. 更新环境变量
+### 5.2 运行测试
 
-### 2. 更新Webhook URL
-确保webhook URL指向您的生产域名。
+```bash
+node test-stripe.js
+```
 
-### 3. 验证合规性
-- 确保有合适的服务条款和隐私政策
-- 实施适当的数据保护措施
-- 遵守当地的支付和税务法规
+## 📝 步骤6: 使用Stripe CLI进行本地Webhook测试 (可选)
 
-## 🔧 故障排除
+### 6.1 安装Stripe CLI
+访问 https://stripe.com/docs/stripe-cli 下载安装
 
-### 常见问题
+### 6.2 登录和设置
+```bash
+stripe login
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
 
-**问题1**: "No such customer" 错误
-**解决方案**: 确保在创建订阅前先创建或获取Stripe客户
+### 6.3 获取本地Webhook Secret
+CLI会显示webhook secret，复制到 `.env.local`
 
-**问题2**: Webhook验证失败
-**解决方案**: 检查webhook密钥是否正确，确保使用原始请求体
+## 🎯 常见问题排查
 
-**问题3**: 订阅状态不同步
-**解决方案**: 检查webhook是否正确处理了所有事件类型
+### 问题1: 支付失败
+- 检查API密钥是否正确
+- 确认产品和价格ID是否存在
+- 查看Stripe Dashboard的日志
 
-### 调试技巧
-1. 检查Stripe Dashboard中的日志
-2. 查看Supabase日志中的错误信息
-3. 使用Stripe CLI进行本地webhook测试：
-   ```bash
-   stripe listen --forward-to localhost:3000/api/webhooks/stripe
-   ```
+### 问题2: Webhook不触发
+- 确认Webhook URL可访问
+- 检查选择的事件类型
+- 验证Webhook Secret
 
-## 📞 支持
+### 问题3: 数据库连接问题
+- 确认Supabase配置正确
+- 检查RLS策略设置
+- 验证数据库表是否创建成功
 
-如果遇到问题：
-1. 查看Stripe文档：https://stripe.com/docs
-2. 检查Supabase文档：https://supabase.com/docs
-3. 在GitHub上提交issue
+## 🔄 定期维护
+
+### 每月检查:
+- 支付统计和收入
+- 失败支付处理
+- 用户订阅状态
+
+### 每季度检查:
+- 价格策略调整
+- 新功能对应的计划更新
+- 安全性审查
 
 ---
 
-🎉 **恭喜！您的AI图片生成器现在具有完整的订阅和支付功能！**
+完成以上配置后，你的Stripe支付系统就可以正常工作了！记得在生产环境中使用正式的API密钥替换测试密钥。
