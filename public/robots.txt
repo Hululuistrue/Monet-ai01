@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.monet-ai.top/sitemap.xml
+
+# Allow ads.txt for AdSense
+Allow: /ads.txt
+
+# Disallow private areas
+Disallow: /api/
+Disallow: /auth/callback
+Disallow: /_next/
+Disallow: /admin/
+
+# Allow important pages for SEO
+Allow: /
+Allow: /generate
+Allow: /history
+Allow: /subscription
+Allow: /auth/login
