@@ -25,6 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="google-adsense-account" content="ca-pub-6115765135908661" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6115765135908661"
              crossOrigin="anonymous"></script>
