@@ -102,7 +102,7 @@ async function tryImagenGeneration(prompt: string, genAI: any) {
         console.log(`  ⚠️  ${modelName} responded but no image data found`)
         
       } catch (modelError) {
-        console.log(`  ❌ ${modelName} failed:`, modelError.message)
+        console.log(`  ❌ ${modelName} failed:`, modelError instanceof Error ? modelError.message : String(modelError))
       }
     }
     

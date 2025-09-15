@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Check environment variables
     const apiKey = process.env.GOOGLE_AI_API_KEY
@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
     const testText = testResponse.text()
 
     // Test available models
-    let availableModels = []
+    const availableModels = []
     try {
       // Try to get model info - this might not work with all API keys
-      const imageModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+      genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
       availableModels.push('gemini-2.0-flash-exp')
     } catch (e) {
       console.log('gemini-2.0-flash-exp not available:', e)
