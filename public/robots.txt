@@ -1,0 +1,32 @@
+# Robots.txt for Monet-AI Image Generator
+User-agent: *
+Allow: /
+Allow: /generate
+Allow: /auth/login
+Allow: /subscription
+
+# Disallow sensitive areas
+Disallow: /api/
+Disallow: /admin/
+Disallow: /debug/
+Disallow: /_next/
+Disallow: /auth/callback
+
+# Sitemap
+Sitemap: https://www.monet-ai.top/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Allow specific search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
