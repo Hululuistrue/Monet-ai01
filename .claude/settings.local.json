@@ -2,7 +2,26 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:www.monet-ai.top)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\")",
+      "Bash(npx create-next-app@latest ai-image-generator --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\")",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(powershell:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebSearch",
+      "Bash(del test-gemini.js)",
+      "Bash(/bashes)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git init:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []

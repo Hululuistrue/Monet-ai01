@@ -1,27 +1,56 @@
-# Robots.txt for Monet-AI Image Generator
+# robots.txt for www.monet-ai.top
+# AI Image Generator - Optimized for fast Google indexing
+
 User-agent: *
 Allow: /
+
+# Primary pages - HIGH PRIORITY for indexing
+Allow: /
 Allow: /generate
-Allow: /auth/login
+Allow: /history
 Allow: /subscription
 
-# Disallow sensitive areas
+# Secondary pages - Allow but lower priority
+Allow: /auth/login
+Allow: /auth/reset-password
+Allow: /subscription/success
+Allow: /subscription/cancel
+
+# Block unnecessary crawling to focus on important content
 Disallow: /api/
+Disallow: /auth/callback
+Disallow: /_next/
+Disallow: /.next/
+Disallow: /node_modules/
 Disallow: /admin/
 Disallow: /debug/
-Disallow: /_next/
-Disallow: /auth/callback
+Disallow: /*.json$
+Disallow: /*?*utm_*
+Disallow: /*?*fbclid*
 
-# Sitemap
+# Allow essential files
+Allow: /ads.txt
+Allow: /sitemap.xml
+Allow: /robots.txt
+Allow: /favicon.ico
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.svg
+Allow: /*.webp
+
+# Crawl optimization
+Crawl-delay: 1
+
+# Sitemaps - CRITICAL for fast indexing
 Sitemap: https://www.monet-ai.top/sitemap.xml
 
-# Crawl-delay for respectful crawling
-Crawl-delay: 1
-
-# Allow specific search engines
+# For major search engines
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
+Crawl-delay: 0
 
 User-agent: Bingbot
 Allow: /
