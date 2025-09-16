@@ -1,0 +1,70 @@
+export async function GET() {
+  const robotsTxt = `# robots.txt for www.monet-ai.top
+# AI Image Generator - Optimized for fast Google indexing
+
+User-agent: *
+Allow: /
+
+# Primary pages - HIGH PRIORITY for indexing
+Allow: /
+Allow: /generate
+Allow: /history
+Allow: /subscription
+
+# Secondary pages - Allow but lower priority
+Allow: /auth/login
+Allow: /auth/reset-password
+Allow: /subscription/success
+Allow: /subscription/cancel
+
+# Block unnecessary crawling to focus on important content
+Disallow: /api/
+Disallow: /auth/callback
+Disallow: /_next/
+Disallow: /.next/
+Disallow: /node_modules/
+Disallow: /admin/
+Disallow: /debug/
+Disallow: /*.json$
+Disallow: /*?*utm_*
+Disallow: /*?*fbclid*
+
+# Allow essential files
+Allow: /ads.txt
+Allow: /sitemap.xml
+Allow: /robots.txt
+Allow: /favicon.ico
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.svg
+Allow: /*.webp
+
+# Crawl optimization
+Crawl-delay: 1
+
+# Sitemaps - CRITICAL for fast indexing
+Sitemap: https://www.monet-ai.top/sitemap.xml
+
+# For major search engines - IMPORTANT FOR SEO
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1`
+
+  return new Response(robotsTxt, {
+    headers: {
+      'Content-Type': 'text/plain',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  })
+}
