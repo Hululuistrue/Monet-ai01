@@ -1,4 +1,5 @@
-# robots.txt for www.monet-ai.top
+export async function GET() {
+  const robotsTxt = `# robots.txt for www.monet-ai.top
 # AI Image Generator - Optimized for fast Google indexing
 
 User-agent: *
@@ -47,7 +48,7 @@ Crawl-delay: 1
 # Sitemaps - CRITICAL for fast indexing
 Sitemap: https://www.monet-ai.top/sitemap.xml
 
-# For major search engines
+# For major search engines - IMPORTANT FOR SEO
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 0
@@ -58,4 +59,12 @@ Crawl-delay: 1
 
 User-agent: Slurp
 Allow: /
-Crawl-delay: 1
+Crawl-delay: 1`
+
+  return new Response(robotsTxt, {
+    headers: {
+      'Content-Type': 'text/plain',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  })
+}

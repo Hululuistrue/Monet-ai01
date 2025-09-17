@@ -13,8 +13,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Image Generator",
-  description: "Generate high-quality images with AI using Gemini",
+  title: "Monet-AI Image Generator - Professional AI Art Creation",
+  description: "Create stunning, high-quality images with AI using advanced Gemini technology. Professional AI image generator for artists, designers, and creators. Transform text to art instantly.",
+  keywords: "AI image generator, text to image, artificial intelligence, digital art, image creation, Gemini AI, professional art tools",
+  authors: [{ name: "Monet-AI Team" }],
+  creator: "Monet-AI",
+  publisher: "Monet-AI",
+  robots: "index, follow",
+  openGraph: {
+    title: "Monet-AI Image Generator - Professional AI Art Creation",
+    description: "Create stunning, high-quality images with AI using advanced Gemini technology. Professional AI image generator for artists, designers, and creators.",
+    url: "https://www.monet-ai.top",
+    siteName: "Monet-AI Image Generator",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Monet-AI Image Generator - Professional AI Art Creation",
+    description: "Create stunning, high-quality images with AI using advanced Gemini technology. Professional AI image generator for artists, designers, and creators.",
+    creator: "@MonetAI",
+  },
+  alternates: {
+    canonical: "https://www.monet-ai.top",
+  },
+  verification: {
+    google: "google-site-verification-placeholder",
+  },
 };
 
 export default function RootLayout({
@@ -37,8 +62,14 @@ export default function RootLayout({
             `,
           }}
         />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta httpEquiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://pagead2.googlesyndication.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.openai.com https://*.supabase.co https://js.stripe.com https://www.google-analytics.com" />
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="google-adsense-account" content="ca-pub-6115765135908661" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6115765135908661"
              crossOrigin="anonymous"></script>

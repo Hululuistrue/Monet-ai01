@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "WebFetch(domain:www.monet-ai.top)",
+      "Bash(npm run build:*)",
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\")",
       "Bash(npx create-next-app@latest ai-image-generator --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\")",
       "Bash(npm install:*)",
