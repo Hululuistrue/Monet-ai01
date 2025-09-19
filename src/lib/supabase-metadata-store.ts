@@ -36,7 +36,7 @@ export class SupabaseMetadataSubscriptionStore {
       return null
     }
 
-    const metadata = user.user_metadata as any
+    const metadata = user.user_metadata as Record<string, unknown>
     
     if (metadata.subscription_plan && metadata.subscription_status) {
       return {

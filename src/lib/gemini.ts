@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GeminiGenerationResult } from '@/types'
 
 // Lazy initialization to avoid build-time errors
 function getGeminiClient() {
@@ -9,7 +10,7 @@ function getGeminiClient() {
   return new GoogleGenerativeAI(apiKey)
 }
 
-export async function generateImage(prompt: string) {
+export async function generateImage(prompt: string): Promise<GeminiGenerationResult> {
   try {
     const genAI = getGeminiClient()
     
@@ -40,7 +41,7 @@ export async function generateImage(prompt: string) {
 }
 
 // Try Gemini 2.5 Flash Image for actual image generation
-async function tryImagenGeneration(prompt: string, genAI: any) {
+async function tryImagenGeneration(prompt: string, genAI: GoogleGenerativeAI): Promise<GeminiGenerationResult | null> {
   try {
     console.log('🔍 Attempting Gemini 2.5 Flash Image generation...')
     
@@ -108,14 +109,14 @@ async function tryImagenGeneration(prompt: string, genAI: any) {
     
     return null // No image generated, try next method
     
-  } catch (error) {
+  } catch {
     console.log('💡 Imagen API not available, trying Gemini text generation...')
     return null // Fall back to next method
   }
 }
 
 // Use Gemini for text description and generate enhanced SVG
-async function generateWithGeminiText(prompt: string, genAI: any) {
+async function generateWithGeminiText(prompt: string, genAI: GoogleGenerativeAI): Promise<GeminiGenerationResult> {
   try {
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash-exp',
@@ -220,14 +221,14 @@ function generateEnhancedPlaceholder(prompt: string, size: string = '1024x1024',
   // Generate pattern based on prompt
   let pattern = ''
   if (promptLower.includes('stars') || promptLower.includes('night') || promptLower.includes('space')) {
-    pattern = Array.from({length: 50}, (_, i) => {
+    pattern = Array.from({length: 50}, () => {
       const x = Math.random() * width
       const y = Math.random() * height
       const size = Math.random() * 3 + 1
       return `<circle cx="${x}" cy="${y}" r="${size}" fill="rgba(255,255,255,0.8)" opacity="${Math.random() * 0.5 + 0.3}"/>`
     }).join('')
   } else if (promptLower.includes('flower') || promptLower.includes('garden')) {
-    pattern = Array.from({length: 20}, (_, i) => {
+    pattern = Array.from({length: 20}, () => {
       const x = Math.random() * width
       const y = Math.random() * height
       const size = Math.random() * 20 + 10

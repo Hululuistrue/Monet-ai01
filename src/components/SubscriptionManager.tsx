@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Crown, Check, Loader2, CreditCard, Star, Zap, Shield, AlertTriangle, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -207,7 +207,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
     if (user) {
       fetchData()
     }
-  }, [user])
+  }, [user, fetchData])
 
   // 移除自动选择逻辑，让用户手动点击升级按钮
   // useEffect(() => {
@@ -219,7 +219,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
   //   }
   // }, [selectedPlan, plans, currentSubscription, loading, upgrading])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // 获取所有计划
       const plansResponse = await fetch('/api/subscription/plans')
@@ -257,7 +257,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   const handleSelectPlan = async (planName: string) => {
     console.log('handleSelectPlan called with:', planName)

@@ -3,7 +3,7 @@ import { generateImage } from '@/lib/gemini'
 import { supabase } from '@/lib/supabase'
 import { validatePrompt, generateId } from '@/utils/helpers'
 import { isRateLimited, incrementRateLimit, getGuestLimits } from '@/utils/rateLimit'
-import { GenerationRequest } from '@/types'
+import { GenerationRequest, GeminiGenerationResult } from '@/types'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate image(s) using Gemini API - handle batch generation
-    const results: any[] = []
+    const results: GeminiGenerationResult[] = []
     
     if (n === 1) {
       // Single image generation
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       if (!result.success) {
         return NextResponse.json({
           success: false,
-          error: (result as any).error || 'Failed to generate image'
+          error: result.error || 'Failed to generate image'
         }, { status: 500 })
       }
       results.push(result)
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         if (result.status === 'fulfilled' && result.value.success) {
           results.push(result.value)
         } else {
-          console.error('Batch generation error:', result.status === 'rejected' ? result.reason : (result.value as any)?.error)
+          console.error('Batch generation error:', result.status === 'rejected' ? result.reason : result.value.error)
           // Add a failed result with placeholder
           results.push({
             success: true,
@@ -124,12 +124,12 @@ export async function POST(request: NextRequest) {
     // Prepare images data for response and database
     const imagesData = results.map((result) => ({
       id: generateId(),
-      url: result.data.imageUrl,
-      thumbnail: result.data.thumbnailUrl,
+      url: result.data?.imageUrl || '',
+      thumbnail: result.data?.thumbnailUrl || '',
       size,
       created_at: new Date().toISOString(),
-      source: result.data.source,
-      notice: result.data.notice
+      source: result.data?.source || 'unknown',
+      notice: result.data?.notice
     }))
 
     // Save to database if user is authenticated

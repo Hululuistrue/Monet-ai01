@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { User, ChevronDown, Settings, LogOut, History, Crown } from 'lucide-react'
+import { User, ChevronDown, LogOut, History, Crown } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface UserMenuDropdownProps {

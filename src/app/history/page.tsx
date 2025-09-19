@@ -19,7 +19,7 @@ interface GeneratedImage {
 export default function HistoryPage() {
   const [images, setImages] = useState<GeneratedImage[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
+  const [, setUser] = useState<User | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 

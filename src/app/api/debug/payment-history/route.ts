@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
     // 检查各个表的状态
     const results: {
       user_id: string
-      tables: Record<string, any>
-      [key: string]: any // 允许动态属性
+      tables: Record<string, unknown>
+      [key: string]: unknown
     } = {
       user_id: user.id,
       tables: {}

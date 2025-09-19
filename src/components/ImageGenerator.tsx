@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader2, Download, Sparkles, User, History, LogOut, ArrowLeft } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Loader2, Download, Sparkles, User, ArrowLeft } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
 import AuthModal from './AuthModal'
@@ -26,11 +26,23 @@ export default function ImageGenerator() {
   const [style, setStyle] = useState('natural')
   const [quality, setQuality] = useState('standard')
 
-  useEffect(() => {
-    checkAuth()
+  const fetchCredits = useCallback(async (token: string) => {
+    try {
+      const response = await fetch('/api/credits', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const result = await response.json()
+      if (result.success) {
+        setCredits(result.data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch credits:', err)
+    }
   }, [])
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       setUser(session.user)
@@ -51,23 +63,11 @@ export default function ImageGenerator() {
     })
 
     return () => subscription.unsubscribe()
-  }
+  }, [fetchCredits])
 
-  const fetchCredits = async (token: string) => {
-    try {
-      const response = await fetch('/api/credits', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      const result = await response.json()
-      if (result.success) {
-        setCredits(result.data)
-      }
-    } catch (err) {
-      console.error('Failed to fetch credits:', err)
-    }
-  }
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -160,7 +160,7 @@ export default function ImageGenerator() {
       
       // Clean up the blob URL
       window.URL.revokeObjectURL(url)
-    } catch (error) {
+    } catch {
       // Fallback: try direct download
       const link = document.createElement('a')
       link.href = imageUrl
