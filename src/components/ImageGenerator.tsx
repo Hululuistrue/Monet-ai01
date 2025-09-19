@@ -8,6 +8,9 @@ import { supabase } from '@/lib/supabase'
 import AuthModal from './AuthModal'
 import PromptTemplates from './PromptTemplates'
 import UserMenuDropdown from './UserMenuDropdown'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function ImageGenerator() {
   const [prompt, setPrompt] = useState('')
@@ -274,7 +277,7 @@ export default function ImageGenerator() {
                 <PromptTemplates onSelectTemplate={setPrompt} />
                 
                 <div className="relative">
-                  <textarea
+                  <Textarea
                     id="prompt"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
@@ -372,11 +375,12 @@ export default function ImageGenerator() {
                 )}
               </div>
               
-              <button
+              <Button
                 onClick={handleGenerate}
                 disabled={loading || !prompt.trim()}
+                size="lg"
                 className={cn(
-                  "group relative w-full py-6 px-8 rounded-2xl font-bold text-lg text-white transition-all duration-300 overflow-hidden",
+                  "group relative w-full py-6 px-8 rounded-2xl font-bold text-lg text-white transition-all duration-300 overflow-hidden h-auto",
                   "bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600",
                   "hover:shadow-2xl hover:shadow-purple-500/30 transform hover:scale-[1.02]",
                   "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
@@ -398,22 +402,19 @@ export default function ImageGenerator() {
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="relative mb-12">
-            <div className="bg-red-50/80 backdrop-blur-sm border-2 border-red-200 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">!</span>
-                </div>
-                <p className="text-red-800 font-semibold">{error}</p>
-              </div>
-            </div>
+          <div className="mb-12">
+            <Alert variant="destructive">
+              <AlertDescription className="font-semibold">
+                {error}
+              </AlertDescription>
+            </Alert>
           </div>
         )}
 
@@ -450,25 +451,23 @@ export default function ImageGenerator() {
               
               {/* Generation Info Notice */}
               {generationInfo && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-blue-900 mb-1">
+                <div className="mb-6">
+                  <Alert>
+                    <Sparkles className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="font-semibold mb-1">
                         {generationInfo.source === 'ai-description' ? '🎨 AI-Enhanced Visual' : '✨ Enhanced Placeholder'}
-                      </h4>
-                      <p className="text-blue-800 text-sm">
+                      </div>
+                      <div className="text-sm">
                         {generationInfo.notice}
                         {generationInfo.source === 'ai-description' && (
-                          <span className="block mt-1 text-blue-600">
+                          <span className="block mt-1">
                             Our AI analyzed your prompt and created this visual representation with enhanced styling.
                           </span>
                         )}
-                      </p>
-                    </div>
-                  </div>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
                 </div>
               )}
               

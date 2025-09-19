@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Crown, Check, Loader2, CreditCard, Star, Zap, Shield, AlertTriangle, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 interface SubscriptionPlan {
   id: string
@@ -101,7 +103,7 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
   }
 
   return (
-    <div className={`relative bg-white rounded-2xl shadow-lg p-6 transition-all duration-200 ${getPlanColor()}`}>
+    <Card className={`relative transition-all duration-200 ${getPlanColor()}`}>
       {isPopular && !isPreselected && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
           <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-medium">
@@ -126,20 +128,22 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
         </div>
       )}
       
-      <div className="text-center">
+      <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
           <div className={`p-3 rounded-full ${plan.name === 'pro' ? 'bg-yellow-100 text-yellow-600' : plan.name === 'basic' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'}`}>
             {getPlanIcon()}
           </div>
         </div>
         
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.display_name}</h3>
+        <CardTitle className="text-xl">{plan.display_name}</CardTitle>
         
         <div className="mb-6">
           <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
           {!isFree && <span className="text-gray-500 ml-1">/month</span>}
         </div>
+      </CardHeader>
 
+      <CardContent className="text-center">
         <div className="space-y-4 mb-8">
           <div className="text-sm text-gray-600">
             <strong>{plan.daily_generations}</strong> generations per day
@@ -160,14 +164,16 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
             </li>
           ))}
         </ul>
+      </CardContent>
 
-        <button
+      <CardFooter>
+        <Button
           onClick={() => {
             console.log('Button clicked for plan:', plan.name)
             onSelectPlan(plan.name)
           }}
           disabled={isCurrentPlan || loading || isDowngrade}
-          className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${getButtonStyle()}`}
+          className={`w-full ${getButtonStyle()}`}
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -185,9 +191,9 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
           ) : (
             'Select Plan'
           )}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardFooter>
+    </Card>
   )
 }
 
@@ -482,7 +488,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Subscription Management</h4>
                 <div className="flex flex-wrap gap-3">
                   {currentSubscription.cancel_at_period_end ? (
-                    <button
+                    <Button
                       onClick={handleReactivateSubscription}
                       disabled={managing}
                       className="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
@@ -493,9 +499,9 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
                         <RotateCcw className="w-4 h-4 mr-2" />
                       )}
                       Reactivate Subscription
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       onClick={handleCancelSubscription}
                       disabled={managing}
                       className="flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
@@ -506,7 +512,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
                         <AlertTriangle className="w-4 h-4 mr-2" />
                       )}
                       Cancel Subscription
-                    </button>
+                    </Button>
                   )}
                 </div>
                 {currentSubscription.cancel_at_period_end && currentSubscription.current_period_end && (

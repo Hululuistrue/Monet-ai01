@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User, Mail, Lock, LogIn, UserPlus } from 'lucide-react'
 import { getSiteUrl } from '@/utils/site-url'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -61,52 +65,49 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <User className="w-6 h-6 text-purple-600" />
             {isLogin ? 'Sign In' : 'Sign Up'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-        </div>
+          </DialogTitle>
+          <DialogDescription>
+            {isLogin ? 'Welcome back! Sign in to your account.' : 'Create your account to get started.'}
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
+              <Input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="pl-10"
                 placeholder="Enter your email"
                 required
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
+              <Input
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="pl-10"
                 placeholder="Enter your password"
                 required
                 minLength={6}
@@ -115,45 +116,48 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold"
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
           >
             {loading ? (
               'Processing...'
             ) : isLogin ? (
               <>
-                <LogIn className="w-5 h-5" />
+                <LogIn className="w-5 h-5 mr-2" />
                 Sign In
               </>
             ) : (
               <>
-                <UserPlus className="w-5 h-5" />
+                <UserPlus className="w-5 h-5 mr-2" />
                 Sign Up
               </>
             )}
-          </button>
+          </Button>
         </form>
 
         <div className="mt-6 text-center">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setIsLogin(!isLogin)}
             className="text-purple-600 hover:text-purple-700 font-medium"
           >
             {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-          </button>
+          </Button>
         </div>
 
         <div className="mt-4 text-center text-sm text-gray-500">
           <p>Sign up to get higher limits and save your creations!</p>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

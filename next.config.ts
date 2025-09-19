@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 设置输出文件追踪根目录
+  outputFileTracingRoot: __dirname,
   // 优化Windows环境下的构建
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     // 避免Windows路径问题
     config.resolve.symlinks = false;
     return config;
