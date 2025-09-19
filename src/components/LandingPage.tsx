@@ -7,6 +7,7 @@ import { ArrowRight, Sparkles, Zap, Shield, Users, Download, Share2, Palette, Gl
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
 import UserMenuDropdown from './UserMenuDropdown'
+import { Button } from '@/components/ui/button'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const features = [
@@ -349,19 +350,24 @@ export default function LandingPage() {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-              <Link 
-                href="/generate"
-                className="group relative bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/30 transform hover:scale-105 overflow-hidden"
+              <Button 
+                asChild
+                size="lg"
+                className="group relative bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/30 transform hover:scale-105 overflow-hidden h-auto"
               >
-                <span className="relative z-10 flex items-center gap-3">
-                  Start Creating Free
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
-              </Link>
+                <Link href="/generate">
+                  <span className="relative z-10 flex items-center gap-3">
+                    Start Creating Free
+                    <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+                </Link>
+              </Button>
               
-              <button 
+              <Button 
+                variant="outline"
+                size="lg"
                 onClick={() => {
                   if (typeof document !== 'undefined') {
                     const exampleSection = document.getElementById('examples-section');
@@ -370,7 +376,7 @@ export default function LandingPage() {
                     }
                   }
                 }}
-                className="group border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-all duration-300 transform hover:scale-105"
+                className="group border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-all duration-300 transform hover:scale-105 h-auto"
               >
                 <span className="flex items-center gap-3">
                   View Examples
@@ -378,7 +384,7 @@ export default function LandingPage() {
                     <div className="w-2 h-2 bg-current rounded-full"></div>
                   </div>
                 </span>
-              </button>
+              </Button>
             </div>
             
             {/* Stats */}
