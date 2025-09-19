@@ -1,18 +1,28 @@
 /**
  * Get the correct site URL for email redirects
- * Prioritizes environment variable, falls back to window.location.origin in browser
+ * Auto-detects from VERCEL_URL, NEXT_PUBLIC_SITE_URL, or current domain
  */
 export function getSiteUrl(): string {
-  // In production, use the environment variable
+  // 1. Check if explicitly set in environment
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL
   }
   
-  // In browser, use window.location.origin
+  // 2. Auto-detect from Vercel deployment URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  // 3. Auto-detect from Vercel branch deployment URL  
+  if (process.env.VERCEL_BRANCH_URL) {
+    return `https://${process.env.VERCEL_BRANCH_URL}`
+  }
+  
+  // 4. In browser, use current domain
   if (typeof window !== 'undefined') {
     return window.location.origin
   }
   
-  // Fallback for server-side rendering
+  // 5. Fallback for local development
   return 'http://localhost:3000'
 }
