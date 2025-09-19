@@ -51,6 +51,7 @@ export interface GeminiGenerationResult {
     source?: string
     error?: string
     notice?: string
+    mimeType?: string
   }
   usage: {
     tokens: number

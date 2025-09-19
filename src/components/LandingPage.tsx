@@ -478,7 +478,7 @@ export default function LandingPage() {
                             "font-bold text-lg transition-colors duration-300",
                             activeExample === index ? "text-gray-900" : "text-gray-700"
                           )}>
-                            "{example.prompt}"
+                            &ldquo;{example.prompt}&rdquo;
                           </p>
                           <p className={cn(
                             "text-sm font-semibold transition-colors duration-300",
@@ -541,7 +541,7 @@ export default function LandingPage() {
                         {examples[activeExample].style}
                       </span>
                     </div>
-                    <p className="text-2xl font-bold mb-2">"{examples[activeExample].prompt}"</p>
+                    <p className="text-2xl font-bold mb-2">&ldquo;{examples[activeExample].prompt}&rdquo;</p>
                     <div className="text-sm text-gray-300 flex items-center">
                       <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                       Generated in 3.2 seconds
@@ -724,7 +724,7 @@ export default function LandingPage() {
                   {/* Quote */}
                   <blockquote className="relative mb-6">
                     <div className="absolute -top-2 -left-2 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-                      <span className="text-white text-lg font-bold">"</span>
+                      <span className="text-white text-lg font-bold">&ldquo;</span>
                     </div>
                     <p className="text-gray-700 text-lg leading-relaxed italic font-medium group-hover:text-gray-800 transition-colors duration-300 pl-6">
                       {useCase.quote}
@@ -783,7 +783,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Perfect Plan</h2>
-            <p className="text-lg text-gray-600">From free experience to professional creation, there's always one that suits you</p>
+            <p className="text-lg text-gray-600">From free experience to professional creation, there&apos;s always one that suits you</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 pricing-grid">

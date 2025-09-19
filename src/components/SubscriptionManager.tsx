@@ -203,22 +203,6 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
   const [upgrading, setUpgrading] = useState(false)
   const [managing, setManaging] = useState(false)
 
-  useEffect(() => {
-    if (user) {
-      fetchData()
-    }
-  }, [user, fetchData])
-
-  // 移除自动选择逻辑，让用户手动点击升级按钮
-  // useEffect(() => {
-  //   if (selectedPlan && plans.length > 0 && currentSubscription && currentSubscription.plan && !loading && !upgrading) {
-  //     // 如果用户当前是免费计划且有预选计划，自动触发计划选择
-  //     if (currentSubscription.plan.name === 'free') {
-  //       handleSelectPlan(selectedPlan)
-  //     }
-  //   }
-  // }, [selectedPlan, plans, currentSubscription, loading, upgrading])
-
   const fetchData = useCallback(async () => {
     try {
       // 获取所有计划
@@ -258,6 +242,22 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
       setLoading(false)
     }
   }, [user])
+
+  useEffect(() => {
+    if (user) {
+      fetchData()
+    }
+  }, [user, fetchData])
+
+  // 移除自动选择逻辑，让用户手动点击升级按钮
+  // useEffect(() => {
+  //   if (selectedPlan && plans.length > 0 && currentSubscription && currentSubscription.plan && !loading && !upgrading) {
+  //     // 如果用户当前是免费计划且有预选计划，自动触发计划选择
+  //     if (currentSubscription.plan.name === 'free') {
+  //       handleSelectPlan(selectedPlan)
+  //     }
+  //   }
+  // }, [selectedPlan, plans, currentSubscription, loading, upgrading])
 
   const handleSelectPlan = async (planName: string) => {
     console.log('handleSelectPlan called with:', planName)
@@ -524,7 +524,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
               <CreditCard className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Active Subscription</h3>
-            <p className="text-gray-600 mb-6">You're currently on the free plan with limited features.</p>
+            <p className="text-gray-600 mb-6">You&apos;re currently on the free plan with limited features.</p>
             <div className="bg-white rounded-xl p-4 inline-block">
               <div className="text-sm text-gray-600">
                 <div className="flex items-center justify-between mb-2">

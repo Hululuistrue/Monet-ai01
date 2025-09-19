@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { Loader2, Download, Sparkles, User, ArrowLeft } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
@@ -189,13 +190,13 @@ export default function ImageGenerator() {
         <div className="text-center mb-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-6">
-              <a
+              <Link
                 href="/"
                 className="group flex items-center gap-3 px-6 py-3 bg-white/70 backdrop-blur-sm border border-gray-200/50 hover:border-purple-200 rounded-2xl transition-all duration-300 hover:shadow-lg transform hover:scale-105"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" />
                 <span className="font-semibold text-gray-700 group-hover:text-purple-700">Back to Home</span>
-              </a>
+              </Link>
               
               <div className="flex items-center gap-4">
                 <div className="relative">
