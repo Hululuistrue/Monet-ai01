@@ -1,5 +1,6 @@
 'use client'
 
+import type { Metadata } from "next";
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Download, Heart, ArrowLeft } from 'lucide-react'
