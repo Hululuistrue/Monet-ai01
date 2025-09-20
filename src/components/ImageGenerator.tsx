@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Loader2, Download, Sparkles, User, ArrowLeft } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
+import { generateDeviceFingerprint } from '@/utils/deviceFingerprint'
 import AuthModal from './AuthModal'
 import PromptTemplates from './PromptTemplates'
 import UserMenuDropdown from './UserMenuDropdown'
@@ -87,6 +88,7 @@ export default function ImageGenerator() {
     try {
       const headers: any = {
         'Content-Type': 'application/json',
+        'X-Device-Fingerprint': generateDeviceFingerprint()
       }
       
       if (authToken) {
@@ -111,7 +113,9 @@ export default function ImageGenerator() {
         setGeneratedImages(result.data.images.map((img: any) => ({
           id: img.id,
           url: img.url,
-          thumbnail: img.thumbnail || img.url
+          thumbnail: img.thumbnail || img.url,
+          downloadable: img.downloadable,
+          downloadLimitMessage: img.downloadLimitMessage
         })))
         
         // Set generation info if available (for AI-description based images)
@@ -440,11 +444,21 @@ export default function ImageGenerator() {
                 
                 {generatedImages.length === 1 && (
                   <button
-                    onClick={() => handleDownload(generatedImages[0].url, generatedImages[0].id)}
-                    className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/30 transform hover:scale-105"
+                    onClick={() => {
+                      if (generatedImages[0].downloadable) {
+                        handleDownload(generatedImages[0].url, generatedImages[0].id)
+                      }
+                    }}
+                    disabled={!generatedImages[0].downloadable}
+                    className={`group flex items-center gap-3 px-8 py-4 text-white rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 ${
+                      generatedImages[0].downloadable
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-2xl hover:shadow-green-500/30'
+                        : 'bg-gray-500 cursor-not-allowed opacity-50'
+                    }`}
+                    title={generatedImages[0].downloadable ? 'Download masterpiece' : generatedImages[0].downloadLimitMessage}
                   >
                     <Download className="w-5 h-5 group-hover:animate-bounce" />
-                    Download Masterpiece
+                    {generatedImages[0].downloadable ? 'Download Masterpiece' : 'Download Limited'}
                   </button>
                 )}
               </div>
@@ -498,8 +512,18 @@ export default function ImageGenerator() {
                       {generatedImages.length > 1 && (
                         <div className="absolute top-4 right-4 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">
                           <button
-                            onClick={() => handleDownload(image.url, image.id)}
-                            className="p-3 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-110"
+                            onClick={() => {
+                              if (image.downloadable) {
+                                handleDownload(image.url, image.id)
+                              }
+                            }}
+                            disabled={!image.downloadable}
+                            className={`p-3 text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-110 ${
+                              image.downloadable 
+                                ? 'bg-green-500 hover:bg-green-600' 
+                                : 'bg-gray-500 cursor-not-allowed opacity-50'
+                            }`}
+                            title={image.downloadable ? 'Download image' : image.downloadLimitMessage}
                           >
                             <Download className="w-5 h-5" />
                           </button>
