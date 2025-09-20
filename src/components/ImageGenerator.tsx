@@ -17,7 +17,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export default function ImageGenerator() {
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
-  const [generatedImages, setGeneratedImages] = useState<Array<{id: string, url: string, thumbnail: string}>>([])
+  const [generatedImages, setGeneratedImages] = useState<Array<{
+    id: string, 
+    url: string, 
+    thumbnail: string, 
+    downloadable?: boolean, 
+    downloadLimitMessage?: string
+  }>>([])
   const [error, setError] = useState<string | null>(null)
   const [generationInfo, setGenerationInfo] = useState<{source?: string, notice?: string} | null>(null)
   const [user, setUser] = useState<any>(null)

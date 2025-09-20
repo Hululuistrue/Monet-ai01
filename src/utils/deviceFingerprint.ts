@@ -90,7 +90,7 @@ export function generateGuestIdentifier(deviceFingerprint: string, ip: string): 
  * 验证设备指纹有效性
  */
 export function isValidDeviceFingerprint(fingerprint: string): boolean {
-  return fingerprint && 
+  return Boolean(fingerprint) && 
          fingerprint.length >= 16 && 
          fingerprint !== 'server-side' &&
          !/[^a-zA-Z0-9]/.test(fingerprint)

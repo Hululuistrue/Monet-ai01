@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import PaymentMethodSelector from './PaymentMethodSelector'
 
 interface SubscriptionPlan {
   id: string
@@ -208,6 +209,8 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
   const [loading, setLoading] = useState(true)
   const [upgrading, setUpgrading] = useState(false)
   const [managing, setManaging] = useState(false)
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false)
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -279,21 +282,70 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
       return
     }
 
-    console.log('Starting upgrade process for plan:', planName)
+    // Show payment method selection for paid plans
+    setSelectedPlanForPayment(planName)
+    setShowPaymentMethods(true)
+  }
+
+  const handlePaymentMethodSelect = async (planName: string, paymentMethod: 'stripe' | 'creem') => {
+    setShowPaymentMethods(false)
     setUpgrading(true)
-    
+
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      console.log('Session result:', { session: !!session, error: sessionError })
-      
+      if (paymentMethod === 'creem') {
+        await handleCreemPayment(planName)
+      } else {
+        await handleStripePayment(planName)
+      }
+    } catch (error) {
+      console.error('Payment processing error:', error)
+      alert('Payment creation failed. Please try again.')
+    } finally {
+      setUpgrading(false)
+    }
+  }
+
+  const handleCreemPayment = async (planName: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        console.log('No session found')
         alert('Please log in again to continue')
-        setUpgrading(false)
         return
       }
 
-      console.log('Making API request to create subscription...')
+      const response = await fetch('/api/payment/creem/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          planName,
+          interval: 'monthly'
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success && result.paymentUrl) {
+        window.location.href = result.paymentUrl
+      } else {
+        throw new Error(result.error || 'Failed to create Creem payment')
+      }
+    } catch (error) {
+      console.error('Creem payment error:', error)
+      throw error
+    }
+  }
+
+  const handleStripePayment = async (planName: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        alert('Please log in again to continue')
+        return
+      }
+
       const response = await fetch('/api/subscription', {
         method: 'POST',
         headers: {
@@ -307,28 +359,20 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
         })
       })
 
-      console.log('API response status:', response.status)
-      
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`)
       }
 
       const result = await response.json()
-      console.log('API response result:', result)
       
       if (result.success && result.data.checkout_url) {
-        console.log('Redirecting to checkout URL:', result.data.checkout_url)
         window.location.href = result.data.checkout_url
       } else {
-        console.error('API returned success=false or no checkout_url:', result)
-        alert('Failed to create subscription: ' + (result.error || 'Unknown error') + 
-              (result.details ? '\nDetails: ' + JSON.stringify(result.details) : ''))
+        throw new Error(result.error || 'Failed to create Stripe payment')
       }
     } catch (error) {
-      console.error('Failed to create subscription:', error)
-      alert('An error occurred while creating subscription. Please try again.')
-    } finally {
-      setUpgrading(false)
+      console.error('Stripe payment error:', error)
+      throw error
     }
   }
 
@@ -573,6 +617,19 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
           </div>
         )}
       </div>
+
+      {/* Payment Method Selector */}
+      <PaymentMethodSelector
+        isOpen={showPaymentMethods}
+        onClose={() => {
+          setShowPaymentMethods(false)
+          setSelectedPlanForPayment(null)
+        }}
+        onSelect={(method) => handlePaymentMethodSelect(selectedPlanForPayment!, method)}
+        planName={selectedPlanForPayment || 'basic'}
+        loading={upgrading}
+      />
     </div>
   )
 }
+

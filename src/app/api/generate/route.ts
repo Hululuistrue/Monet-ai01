@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
           type: userPlan,
           maxDownloads: planLimits.maxDownloads,
           quality: planLimits.quality,
-          queuePriority: planLimits.queuePriority || 'standard'
+          queuePriority: planLimits.queuePriority
         }
       }
     })

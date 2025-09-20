@@ -31,7 +31,8 @@ export function getGuestLimits() {
     hourly: 2,
     maxBatchSize: 2,
     maxDownloads: 1,
-    quality: 'standard'
+    quality: 'standard',
+    queuePriority: 'standard'
   }
 }
 
@@ -41,7 +42,8 @@ export function getFreePlanLimits() {
     hourly: 2,
     maxBatchSize: 2,
     maxDownloads: 2,
-    quality: 'standard'
+    quality: 'standard',
+    queuePriority: 'standard'
   }
 }
 
