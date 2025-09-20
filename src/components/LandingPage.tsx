@@ -761,19 +761,21 @@ export default function LandingPage() {
           
           {/* Trust indicators */}
           <div className="mt-20 text-center">
-            <div className="inline-flex items-center space-x-8 bg-white rounded-2xl px-8 py-6 shadow-lg border border-gray-100">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-8 bg-white rounded-2xl px-6 py-6 sm:px-8 shadow-lg border border-gray-100">
               <div className="flex items-center space-x-2">
                 <Star className="w-5 h-5 text-yellow-500" />
                 <span className="text-gray-900 font-bold">4.9/5</span>
                 <span className="text-gray-600">User Rating</span>
               </div>
-              <div className="w-px h-6 bg-gray-200"></div>
+              <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
+              <div className="sm:hidden w-6 h-px bg-gray-200"></div>
               <div className="flex items-center space-x-2">
                 <Users className="w-5 h-5 text-purple-600" />
                 <span className="text-gray-900 font-bold">10K+</span>
                 <span className="text-gray-600">Active Users</span>
               </div>
-              <div className="w-px h-6 bg-gray-200"></div>
+              <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
+              <div className="sm:hidden w-6 h-px bg-gray-200"></div>
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-pink-600" />
                 <span className="text-gray-900 font-bold">1M+</span>
