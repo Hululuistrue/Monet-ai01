@@ -9,6 +9,7 @@ import { generateDeviceFingerprint } from '@/utils/deviceFingerprint'
 import AuthModal from './AuthModal'
 import PromptTemplates from './PromptTemplates'
 import UserMenuDropdown from './UserMenuDropdown'
+import QueueStatus from './QueueStatus'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -563,6 +564,9 @@ export default function ImageGenerator() {
             </div>
           </div>
         )}
+
+        {/* Queue Status */}
+        <QueueStatus authToken={authToken || undefined} />
 
         {/* Usage Info */}
         <div className="relative group">
