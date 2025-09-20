@@ -22,14 +22,14 @@ export const metadata: Metadata = {
   robots: "index, follow",
   icons: {
     icon: [
-      { url: "/logo.png", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" }
+      { url: "/logo.png?v=1", sizes: "any" },
+      { url: "/favicon-16x16.png?v=1", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png?v=1", sizes: "32x32", type: "image/png" }
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }
+      { url: "/apple-touch-icon.png?v=1", sizes: "180x180", type: "image/png" }
     ],
-    shortcut: "/logo.png"
+    shortcut: "/logo.png?v=1"
   },
   openGraph: {
     title: "Monet-AI Image Generator - Professional AI Art Creation",
