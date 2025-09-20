@@ -380,6 +380,38 @@ export default function ImageGenerator() {
                 )}
               </div>
               
+              {/* Generation Limit Warning */}
+              {(!user || (credits && credits.daily_remaining <= 3)) && (
+                <div className="mb-4 p-4 bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center animate-pulse">
+                      <span className="text-white text-sm">⚠️</span>
+                    </div>
+                    <div className="flex-1">
+                      {!user ? (
+                        <div>
+                          <p className="font-bold text-amber-800">⚡ Guest Mode: Limited to 3 images/day</p>
+                          <p className="text-amber-700 text-sm">Sign up FREE to get 10 images/day + save your art!</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-bold text-amber-800">🔥 Running Low: Only {credits?.daily_remaining} credits left today</p>
+                          <p className="text-amber-700 text-sm">Upgrade to Basic or Pro for more daily credits!</p>
+                        </div>
+                      )}
+                    </div>
+                    {!user && (
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="bg-amber-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-600 transition-colors transform hover:scale-105"
+                      >
+                        Sign Up
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <Button
                 onClick={handleGenerate}
                 disabled={loading || !prompt.trim()}
@@ -402,12 +434,37 @@ export default function ImageGenerator() {
                     <>
                       <Sparkles className="w-6 h-6 group-hover:animate-pulse" />
                       Create {batchSize > 1 ? `${batchSize} Masterpieces` : 'Masterpiece'}
+                      {!user && <span className="text-purple-200 text-sm">(Guest: {3 - (0)} left)</span>}
+                      {user && credits && <span className="text-purple-200 text-sm">({credits.daily_remaining} left)</span>}
                     </>
                   )}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
               </Button>
+              
+              {/* Quick Upgrade Prompt for Low Credits */}
+              {user && credits && credits.daily_remaining === 0 && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-300 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm">🚫</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-red-800">No Credits Left Today!</p>
+                        <p className="text-red-700 text-sm">Upgrade now or wait until tomorrow for reset</p>
+                      </div>
+                    </div>
+                    <Link 
+                      href="/subscription"
+                      className="bg-red-500 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-600 transition-colors transform hover:scale-105"
+                    >
+                      Upgrade Now
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -568,54 +625,132 @@ export default function ImageGenerator() {
         {/* Queue Status */}
         <QueueStatus authToken={authToken || undefined} />
 
-        {/* Usage Info */}
-        <div className="relative group">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl opacity-10 blur transition-opacity duration-500"></div>
-          
-          <div className="relative bg-blue-50/80 backdrop-blur-sm border-2 border-blue-200/50 rounded-2xl p-8 shadow-lg">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg">ℹ️</span>
-              </div>
-              <h3 className="text-2xl font-bold text-blue-900">Studio Limits</h3>
-            </div>
-            
-            <div className="text-blue-700 space-y-3">
-              {user ? (
-                <div className="space-y-2">
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="font-semibold">Artist Membership:</span> 50 creations per day, max 10 per hour
-                  </p>
+        {/* Enhanced Permission Status */}
+        <div className="mb-8">
+          {user ? (
+            // Authenticated User Status
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl opacity-20 blur transition-opacity duration-500 group-hover:opacity-30"></div>
+              
+              <div className="relative bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-white text-xl">👤</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-green-900 flex items-center gap-2">
+                        ✅ Free Member Access
+                        <span className="text-lg bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">ACTIVE</span>
+                      </h3>
+                      <p className="text-green-700 font-medium">Welcome back, {user.email}!</p>
+                    </div>
+                  </div>
+                  
                   {credits && (
-                    <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                      <span className="font-semibold">Remaining Today:</span> {credits.daily_remaining} masterpieces
-                    </p>
+                    <div className="text-right">
+                      <div className="text-3xl font-black text-green-600">{credits.daily_remaining}</div>
+                      <div className="text-green-700 font-semibold">Credits Left Today</div>
+                    </div>
                   )}
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                    <span className="font-semibold">Gallery:</span> All your creations are automatically preserved!
-                  </p>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                    <span className="font-semibold">Guest Access:</span> 3 creations per day, max 2 per hour
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="font-semibold">Member Benefits:</span> 50 creations per day, max 10 per hour
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                    <span className="font-semibold">Join Free:</span> Unlock higher limits and save your artistic journey!
-                  </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-green-200">
+                    <div className="text-2xl font-bold text-green-600">10</div>
+                    <div className="text-green-700 font-medium">Daily Limit</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-green-200">
+                    <div className="text-2xl font-bold text-green-600">2</div>
+                    <div className="text-green-700 font-medium">Per Hour</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-green-200">
+                    <div className="text-2xl font-bold text-green-600">∞</div>
+                    <div className="text-green-700 font-medium">Gallery Storage</div>
+                  </div>
                 </div>
-              )}
+                
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-lg">🚀 Want More Power?</h4>
+                      <p className="text-purple-100">Upgrade to Basic (50/day) or Pro (200/day + Priority Queue)</p>
+                    </div>
+                    <Link href="/subscription" className="bg-white text-purple-600 px-6 py-2 rounded-xl font-bold hover:bg-purple-50 transition-colors">
+                      Upgrade
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            // Guest User Status - More Prominent
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl opacity-25 blur transition-opacity duration-500 group-hover:opacity-35"></div>
+              
+              <div className="relative bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-300 rounded-3xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                      <span className="text-white text-xl">⚡</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-orange-900 flex items-center gap-2">
+                        ⚠️ Guest Mode - Limited Access
+                        <span className="text-lg bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">FREE</span>
+                      </h3>
+                      <p className="text-orange-700 font-medium">Sign up to unlock full potential!</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-orange-200">
+                    <div className="text-2xl font-bold text-orange-600">3</div>
+                    <div className="text-orange-700 font-medium">Daily Limit</div>
+                    <div className="text-xs text-orange-600 mt-1">⚠️ Very Limited</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-orange-200">
+                    <div className="text-2xl font-bold text-orange-600">2</div>
+                    <div className="text-orange-700 font-medium">Per Hour</div>
+                    <div className="text-xs text-orange-600 mt-1">⏱️ Restricted</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-orange-200">
+                    <div className="text-2xl font-bold text-orange-600">❌</div>
+                    <div className="text-orange-700 font-medium">No Gallery</div>
+                    <div className="text-xs text-orange-600 mt-1">📱 Not Saved</div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl p-4 text-white mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-lg">🎉 Sign Up FREE - Get 5x More!</h4>
+                      <p className="text-green-100">• 10 images/day • Save all your art • No ads • Priority support</p>
+                    </div>
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="bg-white text-green-600 px-6 py-2 rounded-xl font-bold hover:bg-green-50 transition-colors shadow-lg transform hover:scale-105"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="bg-purple-600 rounded-2xl p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-lg">👑 Go Pro - Unlimited Power!</h4>
+                      <p className="text-purple-100">• 200 images/day • Priority queue • HD quality • Commercial use</p>
+                    </div>
+                    <Link href="/subscription" className="bg-white text-purple-600 px-6 py-2 rounded-xl font-bold hover:bg-purple-50 transition-colors shadow-lg transform hover:scale-105">
+                      Upgrade
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         <AuthModal 
