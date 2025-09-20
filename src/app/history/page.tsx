@@ -251,7 +251,7 @@ export default function HistoryPage() {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )
