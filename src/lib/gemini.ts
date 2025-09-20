@@ -10,18 +10,22 @@ function getGeminiClient() {
   return new GoogleGenerativeAI(apiKey)
 }
 
-export async function generateImage(prompt: string): Promise<GeminiGenerationResult> {
+export async function generateImage(
+  prompt: string, 
+  size: string = '1024x1024', 
+  quality: string = 'standard'
+): Promise<GeminiGenerationResult> {
   try {
     const genAI = getGeminiClient()
     
     // First try with Imagen API if available, then fallback to Gemini text generation
-    return await tryImagenGeneration(prompt, genAI) || await generateWithGeminiText(prompt, genAI)
+    return await tryImagenGeneration(prompt, size, quality, genAI) || await generateWithGeminiText(prompt, size, quality, genAI)
     
   } catch (error) {
     console.error('❌ Gemini image generation error:', error)
     
     // Generate enhanced SVG placeholder as final fallback
-    const fallbackUrl = generateEnhancedPlaceholder(prompt, '1024x1024')
+    const fallbackUrl = generateEnhancedPlaceholder(prompt, size)
     return {
       success: true,
       data: {
@@ -41,7 +45,12 @@ export async function generateImage(prompt: string): Promise<GeminiGenerationRes
 }
 
 // Try Gemini 2.5 Flash Image for actual image generation
-async function tryImagenGeneration(prompt: string, genAI: GoogleGenerativeAI): Promise<GeminiGenerationResult | null> {
+async function tryImagenGeneration(
+  prompt: string, 
+  size: string, 
+  quality: string, 
+  genAI: GoogleGenerativeAI
+): Promise<GeminiGenerationResult | null> {
   try {
     console.log('🔍 Attempting Gemini 2.5 Flash Image generation...')
     
@@ -116,7 +125,12 @@ async function tryImagenGeneration(prompt: string, genAI: GoogleGenerativeAI): P
 }
 
 // Use Gemini for text description and generate enhanced SVG
-async function generateWithGeminiText(prompt: string, genAI: GoogleGenerativeAI): Promise<GeminiGenerationResult> {
+async function generateWithGeminiText(
+  prompt: string, 
+  size: string, 
+  quality: string, 
+  genAI: GoogleGenerativeAI
+): Promise<GeminiGenerationResult> {
   try {
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash-exp',
@@ -146,7 +160,7 @@ Keep response under 300 words, focused on visual details an artist would need.`
     console.log('✅ Received description from Gemini:', description.substring(0, 200) + '...')
     
     // Generate enhanced SVG based on the description and original prompt
-    const enhancedSvg = generateEnhancedPlaceholder(prompt, '1024x1024', description)
+    const enhancedSvg = generateEnhancedPlaceholder(prompt, size, description)
     const thumbnailSvg = generateEnhancedPlaceholder(prompt, '512x512', description)
     
     return {
@@ -169,7 +183,7 @@ Keep response under 300 words, focused on visual details an artist would need.`
     console.error('❌ Gemini text generation error:', error)
     
     // Fallback to basic enhanced SVG
-    const fallbackUrl = generateEnhancedPlaceholder(prompt, '1024x1024')
+    const fallbackUrl = generateEnhancedPlaceholder(prompt, size)
     return {
       success: true,
       data: {
