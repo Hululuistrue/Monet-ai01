@@ -84,6 +84,11 @@ export default function RootLayout({
         <meta name="google-adsense-account" content="ca-pub-6115765135908661" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6115765135908661"
              crossOrigin="anonymous"></script>
+        
+        {/* Favicon - Force refresh */}
+        <link rel="icon" type="image/png" href="/logo.png?v=3" />
+        <link rel="shortcut icon" type="image/png" href="/logo.png?v=3" />
+        <link rel="apple-touch-icon" href="/logo.png?v=3" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
