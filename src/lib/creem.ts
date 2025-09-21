@@ -2,11 +2,10 @@
 // Docs: https://docs.creem.io/
 
 export interface CreemConfig {
-  merchantId: string
   apiKey: string
-  apiSecret: string
-  baseUrl: string
   webhookSecret: string
+  environment: string
+  baseUrl: string
 }
 
 export interface CreemPaymentRequest {
@@ -46,26 +45,25 @@ class CreemPaymentService {
 
   constructor() {
     this.config = {
-      merchantId: process.env.CREEM_MERCHANT_ID || '',
       apiKey: process.env.CREEM_API_KEY || '',
-      apiSecret: process.env.CREEM_API_SECRET || '',
-      baseUrl: process.env.CREEM_BASE_URL || 'https://api.creem.io',
-      webhookSecret: process.env.CREEM_WEBHOOK_SECRET || ''
+      webhookSecret: process.env.CREEM_WEBHOOK_SECRET || '',
+      environment: process.env.CREEM_ENV || 'test',
+      baseUrl: process.env.CREEM_BASE_URL || 'https://api.creem.io'
     }
 
-    if (!this.config.merchantId || !this.config.apiKey || !this.config.apiSecret) {
+    if (!this.config.apiKey || !this.config.webhookSecret) {
       console.warn('Creem payment configuration incomplete. Please check environment variables.')
     }
   }
 
   isConfigured(): boolean {
-    return !!(this.config.merchantId && this.config.apiKey && this.config.apiSecret)
+    return !!(this.config.apiKey && this.config.webhookSecret)
   }
 
   private async generateSignature(data: string, timestamp: string): Promise<string> {
     const crypto = await import('crypto')
     const payload = `${timestamp}.${data}`
-    return crypto.createHmac('sha256', this.config.apiSecret).update(payload).digest('hex')
+    return crypto.createHmac('sha256', this.config.webhookSecret).update(payload).digest('hex')
   }
 
   private async makeRequest(endpoint: string, method: string = 'GET', data?: any): Promise<any> {
@@ -77,8 +75,7 @@ class CreemPaymentService {
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'X-Creem-Merchant-ID': this.config.merchantId,
-      'X-Creem-API-Key': this.config.apiKey,
+      'x-api-key': this.config.apiKey,
       'X-Creem-Timestamp': timestamp,
       'X-Creem-Signature': signature
     }

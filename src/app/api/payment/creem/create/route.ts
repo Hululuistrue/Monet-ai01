@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check if Creem is properly configured
     if (!creemPayment.isConfigured()) {
-      console.error('Creem payment configuration incomplete')
+      console.error('Creem payment configuration incomplete. Missing CREEM_API_KEY or CREEM_WEBHOOK_SECRET')
       return NextResponse.json({ 
         error: 'Payment service temporarily unavailable. Please try Stripe payment instead.',
         errorCode: 'CREEM_CONFIG_MISSING'

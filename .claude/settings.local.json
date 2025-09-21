@@ -21,7 +21,9 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git init:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "WebFetch(domain:supastarter.dev)",
+      "WebFetch(domain:nextdevkit.com)"
     ],
     "deny": [],
     "ask": []
