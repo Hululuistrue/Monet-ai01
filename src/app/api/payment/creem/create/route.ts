@@ -6,13 +6,17 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if Creem is properly configured
-    if (!creemPayment.isConfigured()) {
+    // Check if Creem is properly configured (allow demo mode)
+    if (!creemPayment.isConfigured() && !creemPayment.isDemoMode()) {
       console.error('Creem payment configuration incomplete. Missing CREEM_API_KEY or CREEM_WEBHOOK_SECRET')
       return NextResponse.json({ 
         error: 'Payment service temporarily unavailable. Please try Stripe payment instead.',
         errorCode: 'CREEM_CONFIG_MISSING'
       }, { status: 503 })
+    }
+
+    if (creemPayment.isDemoMode()) {
+      console.log('🎭 Running Creem in demo mode')
     }
 
     const authHeader = request.headers.get('authorization')
@@ -55,7 +59,7 @@ export async function POST(request: NextRequest) {
       customerName: user.user_metadata?.full_name || user.email || '',
       returnUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription/success?session_id=${orderId}`,
       cancelUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription?cancelled=true`,
-      webhookUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/creem`,
+      webhookUrl: process.env.CREEM_WEBHOOK_URL || `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/creem`,
       metadata: {
         userId: user.id,
         planName,

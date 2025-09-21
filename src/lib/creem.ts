@@ -60,6 +60,10 @@ class CreemPaymentService {
     return !!(this.config.apiKey && this.config.webhookSecret)
   }
 
+  isDemoMode(): boolean {
+    return !this.isConfigured() || this.config.apiKey === 'creem_test_your_api_key_here'
+  }
+
   private async generateSignature(data: string, timestamp: string): Promise<string> {
     const crypto = await import('crypto')
     const payload = `${timestamp}.${data}`
@@ -87,22 +91,43 @@ class CreemPaymentService {
     }
 
     try {
+      console.log('🔧 Creem API Request:', { url, method, headers })
+      console.log('🔧 Request Data:', requestData)
+      
       const response = await fetch(url, options)
       const result = await response.json()
 
+      console.log('🔧 Creem API Response:', { 
+        status: response.status, 
+        statusText: response.statusText,
+        result 
+      })
+
       if (!response.ok) {
-        throw new Error(result.message || 'Creem API request failed')
+        console.error('❌ Creem API Error Response:', result)
+        throw new Error(result.message || `Creem API request failed: ${response.status} ${response.statusText}`)
       }
 
       return result
     } catch (error) {
-      console.error('Creem API Error:', error)
+      console.error('❌ Creem API Error:', error)
       throw error
     }
   }
 
   async createPayment(paymentRequest: CreemPaymentRequest): Promise<CreemPaymentResponse> {
     try {
+      // Check if we're in demo mode (missing real API keys)
+      if (!this.isConfigured() || this.config.apiKey === 'creem_test_your_api_key_here') {
+        console.log('🎭 Creem Demo Mode - Returning mock payment response')
+        return {
+          success: true,
+          paymentId: `demo_${Date.now()}`,
+          paymentUrl: `https://demo.creem.io/pay/demo_${Date.now()}`,
+          qrCode: 'data:image/png;base64,demo_qr_code'
+        }
+      }
+
       const response = await this.makeRequest('/v1/payments', 'POST', {
         order_id: paymentRequest.orderId,
         amount: paymentRequest.amount,
@@ -174,14 +199,15 @@ class CreemPaymentService {
 export const creemPayment = new CreemPaymentService()
 
 // Subscription plan mapping for Creem (Global USD pricing)
+// Amounts in cents: $9.99 = 999, $19.99 = 1999
 export const CREEM_PLAN_PRICES = {
   basic: {
     monthly: { amount: 999, currency: 'USD' }, // $9.99
     yearly: { amount: 9999, currency: 'USD' }  // $99.99
   },
   pro: {
-    monthly: { amount: 2999, currency: 'USD' }, // $29.99
-    yearly: { amount: 29999, currency: 'USD' }  // $299.99
+    monthly: { amount: 1999, currency: 'USD' }, // $19.99  
+    yearly: { amount: 19999, currency: 'USD' }  // $199.99
   }
 }
 

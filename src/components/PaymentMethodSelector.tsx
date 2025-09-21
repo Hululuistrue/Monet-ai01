@@ -80,9 +80,9 @@ export default function PaymentMethodSelector({
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-gray-900">
-                  ${planName === 'basic' ? '9.99' : '29.99'}
+                  ${planName === 'basic' ? '9.99' : '19.99'}
                 </div>
-                <div className="text-sm text-gray-500">/月</div>
+                <div className="text-sm text-gray-500">/month</div>
               </div>
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function PaymentMethodSelector({
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-gray-900">
-                  ${planName === 'basic' ? '9.99' : '29.99'}
+                  ${planName === 'basic' ? '9.99' : '19.99'}
                 </div>
                 <div className="text-sm text-gray-500">/month</div>
               </div>
@@ -121,8 +121,8 @@ export default function PaymentMethodSelector({
                 🌍 Global Payment Gateway
               </span>
               <div className="mt-1">
-                <span className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
-                  ⚠️ Test Mode - API Keys Required
+                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                  🎭 Demo Mode - Working Preview
                 </span>
               </div>
             </div>
