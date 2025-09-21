@@ -11,6 +11,7 @@ function SubscriptionSuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const planName = searchParams.get('plan') // 从URL获取计划名称
+  const interval = searchParams.get('interval') // 从URL获取计划周期
   
   const [loading, setLoading] = useState(true)
   const [subscription, setSubscription] = useState<{
@@ -28,6 +29,8 @@ function SubscriptionSuccessContent() {
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
+      console.log('Success page URL parameters:', { sessionId, planName, interval })
+      
       // 在开发环境中，暂时跳过 session_id 验证
       const isDevEnvironment = process.env.NODE_ENV === 'development'
       
@@ -44,72 +47,7 @@ function SubscriptionSuccessContent() {
           return
         }
 
-        // 在开发环境下，如果有planName参数，直接更新订阅状态
-        if (isDevEnvironment && planName) {
-          console.log('Development environment detected, updating subscription for plan:', planName)
-          
-          // 直接调用更新 API 来设置订阅状态
-          try {
-            const response = await fetch('/api/subscription/update', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-              },
-              body: JSON.stringify({
-                planName,
-                sessionId: sessionId || `dev_${Date.now()}`
-              })
-            })
-
-            const result = await response.json()
-            console.log('Update API response:', result)
-
-            if (response.ok) {
-              console.log('Subscription updated successfully')
-            } else {
-              console.error('Failed to update subscription via API:', result)
-            }
-          } catch (error) {
-            console.error('Failed to update subscription:', error)
-          }
-
-          const mockPlans = {
-            basic: {
-              id: '2',
-              name: 'basic',
-              display_name: 'Basic Plan',
-              daily_generations: 100,
-              max_batch_size: 4,
-              features: ['Enhanced AI image generation', '100 generations per day', 'High quality output', 'Priority support']
-            },
-            pro: {
-              id: '3',
-              name: 'pro',
-              display_name: 'Pro Plan',
-              daily_generations: 500,
-              max_batch_size: 8,
-              features: ['Premium AI image generation', '500 generations per day', 'Ultra high quality', 'Premium support', 'All styles and models']
-            }
-          }
-
-          const mockPlan = mockPlans[planName as keyof typeof mockPlans]
-          if (mockPlan) {
-            setSubscription({
-              subscription_id: 'dev_' + Date.now(),
-              plan: mockPlan,
-              status: 'active',
-              usage: {
-                daily_used: 0,
-                daily_remaining: mockPlan.daily_generations,
-                hourly_used: 0,
-                hourly_remaining: 20
-              }
-            } as any)
-            setLoading(false)
-            return
-          }
-        }
+        // Wait for webhook processing - no automatic activation
 
         // Wait a moment for webhook to process
         await new Promise(resolve => setTimeout(resolve, 2000))
@@ -181,7 +119,7 @@ function SubscriptionSuccessContent() {
         
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
         <p className="text-gray-600 mb-6">
-          Welcome to your new subscription plan. You can now enjoy enhanced features and higher generation limits.
+          Thank you for your payment! Your subscription is being activated. You will be able to enjoy enhanced features and higher generation limits shortly.
         </p>
 
         {subscription && (

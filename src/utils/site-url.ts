@@ -8,11 +8,21 @@ export function getSiteUrl(): string {
     return process.env.NEXT_PUBLIC_SITE_URL
   }
   
+  // Check for Vercel's automatic environment variables
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
   // In browser, use window.location.origin
   if (typeof window !== 'undefined') {
     return window.location.origin
   }
   
-  // Fallback for server-side rendering
+  // Production fallback - use your actual domain
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://www.monet-ai.top'
+  }
+  
+  // Development fallback
   return 'http://localhost:3000'
 }

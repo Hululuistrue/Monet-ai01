@@ -21,7 +21,21 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git init:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(echo $NEXT_PUBLIC_SITE_URL)",
+      "WebFetch(domain:docs.creem.io)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1\\types/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1\\app\\api\\webhooks\\creem/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1\\components\\product\\pricing/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1\\app\\api\\creem\\create-checkout/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1\\app/**)",
+      "Read(C:\\Personals\\06-git\\05-practice\\61-raphael-starterkit-v1/**)"
     ],
     "deny": [],
     "ask": []
