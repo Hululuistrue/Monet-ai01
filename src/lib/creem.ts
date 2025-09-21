@@ -58,6 +58,10 @@ class CreemPaymentService {
     }
   }
 
+  isConfigured(): boolean {
+    return !!(this.config.merchantId && this.config.apiKey && this.config.apiSecret)
+  }
+
   private async generateSignature(data: string, timestamp: string): Promise<string> {
     const crypto = await import('crypto')
     const payload = `${timestamp}.${data}`
@@ -172,15 +176,15 @@ class CreemPaymentService {
 
 export const creemPayment = new CreemPaymentService()
 
-// Subscription plan mapping for Creem
+// Subscription plan mapping for Creem (Global USD pricing)
 export const CREEM_PLAN_PRICES = {
   basic: {
-    monthly: { amount: 999, currency: 'CNY' }, // ¥9.99
-    yearly: { amount: 9999, currency: 'CNY' }  // ¥99.99
+    monthly: { amount: 999, currency: 'USD' }, // $9.99
+    yearly: { amount: 9999, currency: 'USD' }  // $99.99
   },
   pro: {
-    monthly: { amount: 2999, currency: 'CNY' }, // ¥29.99
-    yearly: { amount: 29999, currency: 'CNY' }  // ¥299.99
+    monthly: { amount: 2999, currency: 'USD' }, // $29.99
+    yearly: { amount: 29999, currency: 'USD' }  // $299.99
   }
 }
 

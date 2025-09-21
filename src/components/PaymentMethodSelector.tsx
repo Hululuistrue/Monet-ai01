@@ -106,20 +106,25 @@ export default function PaymentMethodSelector({
               </div>
               <Smartphone className="w-6 h-6 text-green-600" />
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900">Creem 支付</h4>
-                <p className="text-sm text-gray-600">微信、支付宝、银联</p>
+                <h4 className="font-semibold text-gray-900">Creem Payment</h4>
+                <p className="text-sm text-gray-600">Global payment gateway</p>
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-gray-900">
-                  ¥{planName === 'basic' ? '69' : '199'}
+                  ${planName === 'basic' ? '9.99' : '29.99'}
                 </div>
-                <div className="text-sm text-gray-500">/月</div>
+                <div className="text-sm text-gray-500">/month</div>
               </div>
             </div>
             <div className="mt-2 ml-8">
               <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                🎉 推荐 - 更适合中国用户
+                🌍 Global Payment Gateway
               </span>
+              <div className="mt-1">
+                <span className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+                  ⚠️ Test Mode - API Keys Required
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -330,6 +330,11 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
       if (result.success && result.paymentUrl) {
         window.location.href = result.paymentUrl
       } else {
+        // Handle specific error cases
+        if (result.errorCode === 'CREEM_CONFIG_MISSING') {
+          alert('Creem payment temporarily unavailable, please use Stripe payment instead.')
+          return
+        }
         throw new Error(result.error || 'Failed to create Creem payment')
       }
     } catch (error) {
