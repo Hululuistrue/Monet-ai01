@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,6 +21,17 @@ export const metadata: Metadata = {
   creator: "Monet-AI",
   publisher: "Monet-AI",
   robots: "index, follow",
+  icons: {
+    icon: [
+      { url: "/logo.png?v=1", sizes: "any" },
+      { url: "/favicon-16x16.png?v=1", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png?v=1", sizes: "32x32", type: "image/png" }
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png?v=1", sizes: "180x180", type: "image/png" }
+    ],
+    shortcut: "/logo.png?v=1"
+  },
   openGraph: {
     title: "Monet-AI Image Generator - Professional AI Art Creation",
     description: "Create stunning, high-quality images with AI using advanced Gemini technology. Professional AI image generator for artists, designers, and creators.",
@@ -50,18 +62,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-R5BPX4229B"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-R5BPX4229B');
-            `,
-          }}
-        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -73,10 +73,29 @@ export default function RootLayout({
         <meta name="google-adsense-account" content="ca-pub-6115765135908661" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6115765135908661"
              crossOrigin="anonymous"></script>
+        
+        {/* Favicon - Force refresh */}
+        <link rel="icon" type="image/png" href="/logo.png?v=3" />
+        <link rel="shortcut icon" type="image/png" href="/logo.png?v=3" />
+        <link rel="apple-touch-icon" href="/logo.png?v=3" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Google Analytics Scripts */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-R5BPX4229B"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-R5BPX4229B');
+          `}
+        </Script>
+        
         {children}
       </body>
     </html>

@@ -28,13 +28,50 @@ export function isRateLimited(identifier: string, maxRequests: number): boolean 
 export function getGuestLimits() {
   return {
     daily: 3,
-    hourly: 2
+    hourly: 2,
+    maxBatchSize: 2,
+    maxDownloads: 1,
+    quality: 'standard',
+    queuePriority: 'standard'
   }
 }
 
-export function getRegisteredUserLimits() {
+export function getFreePlanLimits() {
   return {
-    daily: 50,
-    hourly: 10
+    daily: 10,
+    hourly: 2,
+    maxBatchSize: 2,
+    maxDownloads: 2,
+    quality: 'standard',
+    queuePriority: 'standard'
+  }
+}
+
+export function getPlanLimits(planName: string) {
+  switch (planName) {
+    case 'guest':
+      return getGuestLimits()
+    case 'free':
+      return getFreePlanLimits()
+    case 'basic':
+      return {
+        daily: 50,
+        hourly: 10,
+        maxBatchSize: 4,
+        maxDownloads: 4,
+        quality: 'hd',
+        queuePriority: 'standard'
+      }
+    case 'pro':
+      return {
+        daily: 200,
+        hourly: 20,
+        maxBatchSize: 6,
+        maxDownloads: 6,
+        quality: 'hd',
+        queuePriority: 'high'
+      }
+    default:
+      return getGuestLimits()
   }
 }

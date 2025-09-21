@@ -103,13 +103,13 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
           user_id: userId,
           subscription_id: userSubscription?.id,
           stripe_payment_intent_id: paymentIntent.id,
-          stripe_charge_id: (paymentIntent as any).charges?.data[0]?.id,
+          stripe_charge_id: paymentIntent.latest_charge as string | null,
           amount: paymentIntent.amount,
           currency: paymentIntent.currency,
           status: 'succeeded',
-          payment_method: (paymentIntent as any).charges?.data[0]?.payment_method_details?.type || 'card',
+          payment_method: 'card',
           description: paymentIntent.description || `Payment for subscription`,
-          receipt_url: (paymentIntent as any).charges?.data[0]?.receipt_url
+          receipt_url: null
         })
       
       console.log(`[Webhook] Payment history created for user: ${userId}`)
@@ -146,8 +146,8 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
           .insert({
             user_id: userId,
             subscription_id: userSubscription?.id,
-            stripe_payment_intent_id: (invoice as any).payment_intent as string,
-            stripe_charge_id: (invoice as any).charge as string,
+            stripe_payment_intent_id: (invoice as any).payment_intent as string | null,
+            stripe_charge_id: (invoice as any).charge as string | null,
             amount: invoice.amount_paid,
             currency: invoice.currency,
             status: 'succeeded',
@@ -250,13 +250,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           user_id: userId,
           subscription_id: userSubscriptionId,
           stripe_payment_intent_id: paymentIntent.id,
-          stripe_charge_id: (paymentIntent as any).charges?.data[0]?.id,
+          stripe_charge_id: paymentIntent.latest_charge as string | null,
           amount: session.amount_total || plan.price,
           currency: session.currency || 'usd',
           status: 'succeeded',
-          payment_method: (paymentIntent as any).charges?.data[0]?.payment_method_details?.type || 'card',
+          payment_method: 'card',
           description: `Upgrade to ${plan.display_name}`,
-          receipt_url: (paymentIntent as any).charges?.data[0]?.receipt_url,
+          receipt_url: null,
           // 存储历史计划信息，确保支付历史显示正确的计划名称
           plan_name: planName,
           plan_display_name: plan.display_name,

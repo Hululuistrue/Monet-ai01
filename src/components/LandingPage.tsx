@@ -7,6 +7,7 @@ import { ArrowRight, Sparkles, Zap, Shield, Users, Download, Share2, Palette, Gl
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
 import UserMenuDropdown from './UserMenuDropdown'
+import { Button } from '@/components/ui/button'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const features = [
@@ -349,19 +350,24 @@ export default function LandingPage() {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-              <Link 
-                href="/generate"
-                className="group relative bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/30 transform hover:scale-105 overflow-hidden"
+              <Button 
+                asChild
+                size="lg"
+                className="group relative bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/30 transform hover:scale-105 overflow-hidden h-auto"
               >
-                <span className="relative z-10 flex items-center gap-3">
-                  Start Creating Free
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
-              </Link>
+                <Link href="/generate">
+                  <span className="relative z-10 flex items-center gap-3">
+                    Start Creating Free
+                    <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+                </Link>
+              </Button>
               
-              <button 
+              <Button 
+                variant="outline"
+                size="lg"
                 onClick={() => {
                   if (typeof document !== 'undefined') {
                     const exampleSection = document.getElementById('examples-section');
@@ -370,7 +376,7 @@ export default function LandingPage() {
                     }
                   }
                 }}
-                className="group border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-all duration-300 transform hover:scale-105"
+                className="group border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-all duration-300 transform hover:scale-105 h-auto"
               >
                 <span className="flex items-center gap-3">
                   View Examples
@@ -378,7 +384,7 @@ export default function LandingPage() {
                     <div className="w-2 h-2 bg-current rounded-full"></div>
                   </div>
                 </span>
-              </button>
+              </Button>
             </div>
             
             {/* Stats */}
@@ -478,7 +484,7 @@ export default function LandingPage() {
                             "font-bold text-lg transition-colors duration-300",
                             activeExample === index ? "text-gray-900" : "text-gray-700"
                           )}>
-                            "{example.prompt}"
+                            &ldquo;{example.prompt}&rdquo;
                           </p>
                           <p className={cn(
                             "text-sm font-semibold transition-colors duration-300",
@@ -541,7 +547,7 @@ export default function LandingPage() {
                         {examples[activeExample].style}
                       </span>
                     </div>
-                    <p className="text-2xl font-bold mb-2">"{examples[activeExample].prompt}"</p>
+                    <p className="text-2xl font-bold mb-2">&ldquo;{examples[activeExample].prompt}&rdquo;</p>
                     <div className="text-sm text-gray-300 flex items-center">
                       <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                       Generated in 3.2 seconds
@@ -724,7 +730,7 @@ export default function LandingPage() {
                   {/* Quote */}
                   <blockquote className="relative mb-6">
                     <div className="absolute -top-2 -left-2 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-                      <span className="text-white text-lg font-bold">"</span>
+                      <span className="text-white text-lg font-bold">&ldquo;</span>
                     </div>
                     <p className="text-gray-700 text-lg leading-relaxed italic font-medium group-hover:text-gray-800 transition-colors duration-300 pl-6">
                       {useCase.quote}
@@ -755,19 +761,21 @@ export default function LandingPage() {
           
           {/* Trust indicators */}
           <div className="mt-20 text-center">
-            <div className="inline-flex items-center space-x-8 bg-white rounded-2xl px-8 py-6 shadow-lg border border-gray-100">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-8 bg-white rounded-2xl px-6 py-6 sm:px-8 shadow-lg border border-gray-100">
               <div className="flex items-center space-x-2">
                 <Star className="w-5 h-5 text-yellow-500" />
                 <span className="text-gray-900 font-bold">4.9/5</span>
                 <span className="text-gray-600">User Rating</span>
               </div>
-              <div className="w-px h-6 bg-gray-200"></div>
+              <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
+              <div className="sm:hidden w-6 h-px bg-gray-200"></div>
               <div className="flex items-center space-x-2">
                 <Users className="w-5 h-5 text-purple-600" />
                 <span className="text-gray-900 font-bold">10K+</span>
                 <span className="text-gray-600">Active Users</span>
               </div>
-              <div className="w-px h-6 bg-gray-200"></div>
+              <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
+              <div className="sm:hidden w-6 h-px bg-gray-200"></div>
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-pink-600" />
                 <span className="text-gray-900 font-bold">1M+</span>
@@ -783,7 +791,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Perfect Plan</h2>
-            <p className="text-lg text-gray-600">From free experience to professional creation, there's always one that suits you</p>
+            <p className="text-lg text-gray-600">From free experience to professional creation, there&apos;s always one that suits you</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 pricing-grid">

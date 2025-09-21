@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar, CreditCard, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
@@ -44,13 +44,7 @@ export default function PaymentHistory({ user }: PaymentHistoryProps) {
   const [page, setPage] = useState(0)
   const pageSize = 10
 
-  useEffect(() => {
-    if (user) {
-      fetchPaymentHistory()
-    }
-  }, [user, page])
-
-  const fetchPaymentHistory = async () => {
+  const fetchPaymentHistory = useCallback(async () => {
     try {
       setLoading(true)
       const { data: { session } } = await supabase.auth.getSession()
@@ -74,7 +68,13 @@ export default function PaymentHistory({ user }: PaymentHistoryProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, pageSize])
+
+  useEffect(() => {
+    if (user) {
+      fetchPaymentHistory()
+    }
+  }, [user, page, fetchPaymentHistory])
 
   const getStatusIcon = (status: string) => {
     switch (status) {

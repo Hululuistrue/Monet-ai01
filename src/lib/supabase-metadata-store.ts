@@ -36,14 +36,14 @@ export class SupabaseMetadataSubscriptionStore {
       return null
     }
 
-    const metadata = user.user_metadata as any
+    const metadata = user.user_metadata as Record<string, unknown>
     
     if (metadata.subscription_plan && metadata.subscription_status) {
       return {
-        subscription_plan: metadata.subscription_plan,
-        subscription_status: metadata.subscription_status,
-        subscribed_at: metadata.subscribed_at || new Date().toISOString(),
-        session_id: metadata.session_id
+        subscription_plan: metadata.subscription_plan as string,
+        subscription_status: metadata.subscription_status as string,
+        subscribed_at: (metadata.subscribed_at as string) || new Date().toISOString(),
+        session_id: metadata.session_id as string | undefined
       }
     }
 

@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Crown, Check, Loader2, CreditCard, Star, Zap, Shield, AlertTriangle, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import PaymentMethodSelector from './PaymentMethodSelector'
 
 interface SubscriptionPlan {
   id: string
@@ -101,7 +104,7 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
   }
 
   return (
-    <div className={`relative bg-white rounded-2xl shadow-lg p-6 transition-all duration-200 ${getPlanColor()}`}>
+    <Card className={`relative transition-all duration-200 ${getPlanColor()}`}>
       {isPopular && !isPreselected && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
           <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-medium">
@@ -126,20 +129,22 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
         </div>
       )}
       
-      <div className="text-center">
+      <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
           <div className={`p-3 rounded-full ${plan.name === 'pro' ? 'bg-yellow-100 text-yellow-600' : plan.name === 'basic' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'}`}>
             {getPlanIcon()}
           </div>
         </div>
         
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.display_name}</h3>
+        <CardTitle className="text-xl">{plan.display_name}</CardTitle>
         
         <div className="mb-6">
           <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
           {!isFree && <span className="text-gray-500 ml-1">/month</span>}
         </div>
+      </CardHeader>
 
+      <CardContent className="text-center">
         <div className="space-y-4 mb-8">
           <div className="text-sm text-gray-600">
             <strong>{plan.daily_generations}</strong> generations per day
@@ -160,14 +165,16 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
             </li>
           ))}
         </ul>
+      </CardContent>
 
-        <button
+      <CardFooter>
+        <Button
           onClick={() => {
             console.log('Button clicked for plan:', plan.name)
             onSelectPlan(plan.name)
           }}
           disabled={isCurrentPlan || loading || isDowngrade}
-          className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${getButtonStyle()}`}
+          className={`w-full ${getButtonStyle()}`}
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -185,9 +192,9 @@ function PricingCard({ plan, currentSubscription, onSelectPlan, loading, isPrese
           ) : (
             'Select Plan'
           )}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardFooter>
+    </Card>
   )
 }
 
@@ -202,24 +209,10 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
   const [loading, setLoading] = useState(true)
   const [upgrading, setUpgrading] = useState(false)
   const [managing, setManaging] = useState(false)
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false)
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (user) {
-      fetchData()
-    }
-  }, [user])
-
-  // 移除自动选择逻辑，让用户手动点击升级按钮
-  // useEffect(() => {
-  //   if (selectedPlan && plans.length > 0 && currentSubscription && currentSubscription.plan && !loading && !upgrading) {
-  //     // 如果用户当前是免费计划且有预选计划，自动触发计划选择
-  //     if (currentSubscription.plan.name === 'free') {
-  //       handleSelectPlan(selectedPlan)
-  //     }
-  //   }
-  // }, [selectedPlan, plans, currentSubscription, loading, upgrading])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // 获取所有计划
       const plansResponse = await fetch('/api/subscription/plans')
@@ -257,7 +250,23 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      fetchData()
+    }
+  }, [user, fetchData])
+
+  // 移除自动选择逻辑，让用户手动点击升级按钮
+  // useEffect(() => {
+  //   if (selectedPlan && plans.length > 0 && currentSubscription && currentSubscription.plan && !loading && !upgrading) {
+  //     // 如果用户当前是免费计划且有预选计划，自动触发计划选择
+  //     if (currentSubscription.plan.name === 'free') {
+  //       handleSelectPlan(selectedPlan)
+  //     }
+  //   }
+  // }, [selectedPlan, plans, currentSubscription, loading, upgrading])
 
   const handleSelectPlan = async (planName: string) => {
     console.log('handleSelectPlan called with:', planName)
@@ -273,21 +282,75 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
       return
     }
 
-    console.log('Starting upgrade process for plan:', planName)
+    // Show payment method selection for paid plans
+    setSelectedPlanForPayment(planName)
+    setShowPaymentMethods(true)
+  }
+
+  const handlePaymentMethodSelect = async (planName: string, paymentMethod: 'stripe' | 'creem') => {
+    setShowPaymentMethods(false)
     setUpgrading(true)
-    
+
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      console.log('Session result:', { session: !!session, error: sessionError })
-      
+      if (paymentMethod === 'creem') {
+        await handleCreemPayment(planName)
+      } else {
+        await handleStripePayment(planName)
+      }
+    } catch (error) {
+      console.error('Payment processing error:', error)
+      alert('Payment creation failed. Please try again.')
+    } finally {
+      setUpgrading(false)
+    }
+  }
+
+  const handleCreemPayment = async (planName: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        console.log('No session found')
         alert('Please log in again to continue')
-        setUpgrading(false)
         return
       }
 
-      console.log('Making API request to create subscription...')
+      const response = await fetch('/api/payment/creem/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          planName,
+          interval: 'monthly'
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success && result.paymentUrl) {
+        window.location.href = result.paymentUrl
+      } else {
+        // Handle specific error cases
+        if (result.errorCode === 'CREEM_CONFIG_MISSING') {
+          alert('Creem payment temporarily unavailable, please use Stripe payment instead.')
+          return
+        }
+        throw new Error(result.error || 'Failed to create Creem payment')
+      }
+    } catch (error) {
+      console.error('Creem payment error:', error)
+      throw error
+    }
+  }
+
+  const handleStripePayment = async (planName: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        alert('Please log in again to continue')
+        return
+      }
+
       const response = await fetch('/api/subscription', {
         method: 'POST',
         headers: {
@@ -301,28 +364,20 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
         })
       })
 
-      console.log('API response status:', response.status)
-      
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`)
       }
 
       const result = await response.json()
-      console.log('API response result:', result)
       
       if (result.success && result.data.checkout_url) {
-        console.log('Redirecting to checkout URL:', result.data.checkout_url)
         window.location.href = result.data.checkout_url
       } else {
-        console.error('API returned success=false or no checkout_url:', result)
-        alert('Failed to create subscription: ' + (result.error || 'Unknown error') + 
-              (result.details ? '\nDetails: ' + JSON.stringify(result.details) : ''))
+        throw new Error(result.error || 'Failed to create Stripe payment')
       }
     } catch (error) {
-      console.error('Failed to create subscription:', error)
-      alert('An error occurred while creating subscription. Please try again.')
-    } finally {
-      setUpgrading(false)
+      console.error('Stripe payment error:', error)
+      throw error
     }
   }
 
@@ -482,7 +537,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Subscription Management</h4>
                 <div className="flex flex-wrap gap-3">
                   {currentSubscription.cancel_at_period_end ? (
-                    <button
+                    <Button
                       onClick={handleReactivateSubscription}
                       disabled={managing}
                       className="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
@@ -493,9 +548,9 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
                         <RotateCcw className="w-4 h-4 mr-2" />
                       )}
                       Reactivate Subscription
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       onClick={handleCancelSubscription}
                       disabled={managing}
                       className="flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
@@ -506,7 +561,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
                         <AlertTriangle className="w-4 h-4 mr-2" />
                       )}
                       Cancel Subscription
-                    </button>
+                    </Button>
                   )}
                 </div>
                 {currentSubscription.cancel_at_period_end && currentSubscription.current_period_end && (
@@ -524,7 +579,7 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
               <CreditCard className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Active Subscription</h3>
-            <p className="text-gray-600 mb-6">You're currently on the free plan with limited features.</p>
+            <p className="text-gray-600 mb-6">You&apos;re currently on the free plan with limited features.</p>
             <div className="bg-white rounded-xl p-4 inline-block">
               <div className="text-sm text-gray-600">
                 <div className="flex items-center justify-between mb-2">
@@ -567,6 +622,19 @@ export default function SubscriptionManager({ user, selectedPlan }: Subscription
           </div>
         )}
       </div>
+
+      {/* Payment Method Selector */}
+      <PaymentMethodSelector
+        isOpen={showPaymentMethods}
+        onClose={() => {
+          setShowPaymentMethods(false)
+          setSelectedPlanForPayment(null)
+        }}
+        onSelect={(method) => handlePaymentMethodSelect(selectedPlanForPayment!, method)}
+        planName={selectedPlanForPayment || 'basic'}
+        loading={upgrading}
+      />
     </div>
   )
 }
+

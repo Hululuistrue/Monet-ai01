@@ -1,17 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader2, Download, Sparkles, User, History, LogOut, ArrowLeft } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { Loader2, Download, Sparkles, User, ArrowLeft } from 'lucide-react'
 import { cn } from '@/utils/helpers'
 import { supabase } from '@/lib/supabase'
+import { generateDeviceFingerprint } from '@/utils/deviceFingerprint'
 import AuthModal from './AuthModal'
 import PromptTemplates from './PromptTemplates'
 import UserMenuDropdown from './UserMenuDropdown'
+import QueueStatus from './QueueStatus'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function ImageGenerator() {
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
-  const [generatedImages, setGeneratedImages] = useState<Array<{id: string, url: string, thumbnail: string}>>([])
+  const [generatedImages, setGeneratedImages] = useState<Array<{
+    id: string, 
+    url: string, 
+    thumbnail: string, 
+    downloadable?: boolean, 
+    downloadLimitMessage?: string
+  }>>([])
   const [error, setError] = useState<string | null>(null)
   const [generationInfo, setGenerationInfo] = useState<{source?: string, notice?: string} | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -26,11 +38,23 @@ export default function ImageGenerator() {
   const [style, setStyle] = useState('natural')
   const [quality, setQuality] = useState('standard')
 
-  useEffect(() => {
-    checkAuth()
+  const fetchCredits = useCallback(async (token: string) => {
+    try {
+      const response = await fetch('/api/credits', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const result = await response.json()
+      if (result.success) {
+        setCredits(result.data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch credits:', err)
+    }
   }, [])
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       setUser(session.user)
@@ -51,23 +75,11 @@ export default function ImageGenerator() {
     })
 
     return () => subscription.unsubscribe()
-  }
+  }, [fetchCredits])
 
-  const fetchCredits = async (token: string) => {
-    try {
-      const response = await fetch('/api/credits', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      const result = await response.json()
-      if (result.success) {
-        setCredits(result.data)
-      }
-    } catch (err) {
-      console.error('Failed to fetch credits:', err)
-    }
-  }
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -83,6 +95,7 @@ export default function ImageGenerator() {
     try {
       const headers: any = {
         'Content-Type': 'application/json',
+        'X-Device-Fingerprint': generateDeviceFingerprint()
       }
       
       if (authToken) {
@@ -107,7 +120,9 @@ export default function ImageGenerator() {
         setGeneratedImages(result.data.images.map((img: any) => ({
           id: img.id,
           url: img.url,
-          thumbnail: img.thumbnail || img.url
+          thumbnail: img.thumbnail || img.url,
+          downloadable: img.downloadable,
+          downloadLimitMessage: img.downloadLimitMessage
         })))
         
         // Set generation info if available (for AI-description based images)
@@ -160,7 +175,7 @@ export default function ImageGenerator() {
       
       // Clean up the blob URL
       window.URL.revokeObjectURL(url)
-    } catch (error) {
+    } catch {
       // Fallback: try direct download
       const link = document.createElement('a')
       link.href = imageUrl
@@ -189,13 +204,13 @@ export default function ImageGenerator() {
         <div className="text-center mb-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-6">
-              <a
+              <Link
                 href="/"
                 className="group flex items-center gap-3 px-6 py-3 bg-white/70 backdrop-blur-sm border border-gray-200/50 hover:border-purple-200 rounded-2xl transition-all duration-300 hover:shadow-lg transform hover:scale-105"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" />
                 <span className="font-semibold text-gray-700 group-hover:text-purple-700">Back to Home</span>
-              </a>
+              </Link>
               
               <div className="flex items-center gap-4">
                 <div className="relative">
@@ -273,7 +288,7 @@ export default function ImageGenerator() {
                 <PromptTemplates onSelectTemplate={setPrompt} />
                 
                 <div className="relative">
-                  <textarea
+                  <Textarea
                     id="prompt"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
@@ -371,11 +386,44 @@ export default function ImageGenerator() {
                 )}
               </div>
               
-              <button
+              {/* Generation Limit Warning */}
+              {(!user || (credits && credits.daily_remaining <= 3)) && (
+                <div className="mb-4 p-4 bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center animate-pulse">
+                      <span className="text-white text-sm">⚠️</span>
+                    </div>
+                    <div className="flex-1">
+                      {!user ? (
+                        <div>
+                          <p className="font-bold text-amber-800">⚡ Guest Mode: Limited to 3 images/day</p>
+                          <p className="text-amber-700 text-sm">Sign up FREE to get 10 images/day + save your art!</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-bold text-amber-800">🔥 Running Low: Only {credits?.daily_remaining} credits left today</p>
+                          <p className="text-amber-700 text-sm">Upgrade to Basic or Pro for more daily credits!</p>
+                        </div>
+                      )}
+                    </div>
+                    {!user && (
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="bg-amber-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-600 transition-colors transform hover:scale-105"
+                      >
+                        Sign Up
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Button
                 onClick={handleGenerate}
                 disabled={loading || !prompt.trim()}
+                size="lg"
                 className={cn(
-                  "group relative w-full py-6 px-8 rounded-2xl font-bold text-lg text-white transition-all duration-300 overflow-hidden",
+                  "group relative w-full py-6 px-8 rounded-2xl font-bold text-lg text-white transition-all duration-300 overflow-hidden h-auto",
                   "bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600",
                   "hover:shadow-2xl hover:shadow-purple-500/30 transform hover:scale-[1.02]",
                   "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
@@ -392,27 +440,49 @@ export default function ImageGenerator() {
                     <>
                       <Sparkles className="w-6 h-6 group-hover:animate-pulse" />
                       Create {batchSize > 1 ? `${batchSize} Masterpieces` : 'Masterpiece'}
+                      {!user && <span className="text-purple-200 text-sm">(Guest: {3 - (0)} left)</span>}
+                      {user && credits && <span className="text-purple-200 text-sm">({credits.daily_remaining} left)</span>}
                     </>
                   )}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
-              </button>
+              </Button>
+              
+              {/* Quick Upgrade Prompt for Low Credits */}
+              {user && credits && credits.daily_remaining === 0 && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-300 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm">🚫</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-red-800">No Credits Left Today!</p>
+                        <p className="text-red-700 text-sm">Upgrade now or wait until tomorrow for reset</p>
+                      </div>
+                    </div>
+                    <Link 
+                      href="/subscription"
+                      className="bg-red-500 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-600 transition-colors transform hover:scale-105"
+                    >
+                      Upgrade Now
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="relative mb-12">
-            <div className="bg-red-50/80 backdrop-blur-sm border-2 border-red-200 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">!</span>
-                </div>
-                <p className="text-red-800 font-semibold">{error}</p>
-              </div>
-            </div>
+          <div className="mb-12">
+            <Alert variant="destructive">
+              <AlertDescription className="font-semibold">
+                {error}
+              </AlertDescription>
+            </Alert>
           </div>
         )}
 
@@ -438,36 +508,44 @@ export default function ImageGenerator() {
                 
                 {generatedImages.length === 1 && (
                   <button
-                    onClick={() => handleDownload(generatedImages[0].url, generatedImages[0].id)}
-                    className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/30 transform hover:scale-105"
+                    onClick={() => {
+                      if (generatedImages[0].downloadable) {
+                        handleDownload(generatedImages[0].url, generatedImages[0].id)
+                      }
+                    }}
+                    disabled={!generatedImages[0].downloadable}
+                    className={`group flex items-center gap-3 px-8 py-4 text-white rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 ${
+                      generatedImages[0].downloadable
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-2xl hover:shadow-green-500/30'
+                        : 'bg-gray-500 cursor-not-allowed opacity-50'
+                    }`}
+                    title={generatedImages[0].downloadable ? 'Download masterpiece' : generatedImages[0].downloadLimitMessage}
                   >
                     <Download className="w-5 h-5 group-hover:animate-bounce" />
-                    Download Masterpiece
+                    {generatedImages[0].downloadable ? 'Download Masterpiece' : 'Download Limited'}
                   </button>
                 )}
               </div>
               
               {/* Generation Info Notice */}
               {generationInfo && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-blue-900 mb-1">
+                <div className="mb-6">
+                  <Alert>
+                    <Sparkles className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="font-semibold mb-1">
                         {generationInfo.source === 'ai-description' ? '🎨 AI-Enhanced Visual' : '✨ Enhanced Placeholder'}
-                      </h4>
-                      <p className="text-blue-800 text-sm">
+                      </div>
+                      <div className="text-sm">
                         {generationInfo.notice}
                         {generationInfo.source === 'ai-description' && (
-                          <span className="block mt-1 text-blue-600">
+                          <span className="block mt-1">
                             Our AI analyzed your prompt and created this visual representation with enhanced styling.
                           </span>
                         )}
-                      </p>
-                    </div>
-                  </div>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
                 </div>
               )}
               
@@ -498,8 +576,18 @@ export default function ImageGenerator() {
                       {generatedImages.length > 1 && (
                         <div className="absolute top-4 right-4 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">
                           <button
-                            onClick={() => handleDownload(image.url, image.id)}
-                            className="p-3 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-110"
+                            onClick={() => {
+                              if (image.downloadable) {
+                                handleDownload(image.url, image.id)
+                              }
+                            }}
+                            disabled={!image.downloadable}
+                            className={`p-3 text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-110 ${
+                              image.downloadable 
+                                ? 'bg-green-500 hover:bg-green-600' 
+                                : 'bg-gray-500 cursor-not-allowed opacity-50'
+                            }`}
+                            title={image.downloadable ? 'Download image' : image.downloadLimitMessage}
                           >
                             <Download className="w-5 h-5" />
                           </button>
@@ -540,54 +628,135 @@ export default function ImageGenerator() {
           </div>
         )}
 
-        {/* Usage Info */}
-        <div className="relative group">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl opacity-10 blur transition-opacity duration-500"></div>
-          
-          <div className="relative bg-blue-50/80 backdrop-blur-sm border-2 border-blue-200/50 rounded-2xl p-8 shadow-lg">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg">ℹ️</span>
-              </div>
-              <h3 className="text-2xl font-bold text-blue-900">Studio Limits</h3>
-            </div>
-            
-            <div className="text-blue-700 space-y-3">
-              {user ? (
-                <div className="space-y-2">
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="font-semibold">Artist Membership:</span> 50 creations per day, max 10 per hour
-                  </p>
+        {/* Queue Status */}
+        <QueueStatus authToken={authToken || undefined} />
+
+        {/* Enhanced Permission Status */}
+        <div className="mb-8">
+          {user ? (
+            // Authenticated User Status
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl opacity-20 blur transition-opacity duration-500 group-hover:opacity-30"></div>
+              
+              <div className="relative bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-white text-xl">👤</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-green-900 flex items-center gap-2">
+                        ✅ Free Member Access
+                        <span className="text-lg bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">ACTIVE</span>
+                      </h3>
+                      <p className="text-green-700 font-medium">Welcome back, {user.email}!</p>
+                    </div>
+                  </div>
+                  
                   {credits && (
-                    <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                      <span className="font-semibold">Remaining Today:</span> {credits.daily_remaining} masterpieces
-                    </p>
+                    <div className="text-right">
+                      <div className="text-3xl font-black text-green-600">{credits.daily_remaining}</div>
+                      <div className="text-green-700 font-semibold">Credits Left Today</div>
+                    </div>
                   )}
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                    <span className="font-semibold">Gallery:</span> All your creations are automatically preserved!
-                  </p>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                    <span className="font-semibold">Guest Access:</span> 3 creations per day, max 2 per hour
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="font-semibold">Member Benefits:</span> 50 creations per day, max 10 per hour
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                    <span className="font-semibold">Join Free:</span> Unlock higher limits and save your artistic journey!
-                  </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-green-200">
+                    <div className="text-2xl font-bold text-green-600">10</div>
+                    <div className="text-green-700 font-medium">Daily Limit</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-green-200">
+                    <div className="text-2xl font-bold text-green-600">2</div>
+                    <div className="text-green-700 font-medium">Per Hour</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-green-200">
+                    <div className="text-2xl font-bold text-green-600">∞</div>
+                    <div className="text-green-700 font-medium">Gallery Storage</div>
+                  </div>
                 </div>
-              )}
+                
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-lg">🚀 Want More Power?</h4>
+                      <p className="text-purple-100">Upgrade to Basic (50/day) or Pro (200/day + Priority Queue)</p>
+                    </div>
+                    <Link href="/subscription" className="bg-white text-purple-600 px-6 py-2 rounded-xl font-bold hover:bg-purple-50 transition-colors">
+                      Upgrade
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            // Guest User Status - More Prominent
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl opacity-25 blur transition-opacity duration-500 group-hover:opacity-35"></div>
+              
+              <div className="relative bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-300 rounded-3xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                      <span className="text-white text-xl">⚡</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-orange-900 flex items-center gap-2">
+                        ⚠️ Guest Mode - Limited Access
+                        <span className="text-lg bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">FREE</span>
+                      </h3>
+                      <p className="text-orange-700 font-medium">Sign up to unlock full potential!</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-orange-200">
+                    <div className="text-2xl font-bold text-orange-600">3</div>
+                    <div className="text-orange-700 font-medium">Daily Limit</div>
+                    <div className="text-xs text-orange-600 mt-1">⚠️ Very Limited</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-orange-200">
+                    <div className="text-2xl font-bold text-orange-600">2</div>
+                    <div className="text-orange-700 font-medium">Per Hour</div>
+                    <div className="text-xs text-orange-600 mt-1">⏱️ Restricted</div>
+                  </div>
+                  <div className="bg-white/60 rounded-2xl p-4 text-center border border-orange-200">
+                    <div className="text-2xl font-bold text-orange-600">❌</div>
+                    <div className="text-orange-700 font-medium">No Gallery</div>
+                    <div className="text-xs text-orange-600 mt-1">📱 Not Saved</div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl p-4 text-white mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-lg">🎉 Sign Up FREE - Get 5x More!</h4>
+                      <p className="text-green-100">• 10 images/day • Save all your art • No ads • Priority support</p>
+                    </div>
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="bg-white text-green-600 px-6 py-2 rounded-xl font-bold hover:bg-green-50 transition-colors shadow-lg transform hover:scale-105"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="bg-purple-600 rounded-2xl p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-lg">👑 Go Pro - Unlimited Power!</h4>
+                      <p className="text-purple-100">• 200 images/day • Priority queue • HD quality • Commercial use</p>
+                    </div>
+                    <Link href="/subscription" className="bg-white text-purple-600 px-6 py-2 rounded-xl font-bold hover:bg-purple-50 transition-colors shadow-lg transform hover:scale-105">
+                      Upgrade
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         <AuthModal 

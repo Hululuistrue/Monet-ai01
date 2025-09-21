@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GeminiGenerationResult } from '@/types'
 
 // Lazy initialization to avoid build-time errors
 function getGeminiClient() {
@@ -9,18 +10,22 @@ function getGeminiClient() {
   return new GoogleGenerativeAI(apiKey)
 }
 
-export async function generateImage(prompt: string) {
+export async function generateImage(
+  prompt: string, 
+  size: string = '1024x1024', 
+  quality: string = 'standard'
+): Promise<GeminiGenerationResult> {
   try {
     const genAI = getGeminiClient()
     
     // First try with Imagen API if available, then fallback to Gemini text generation
-    return await tryImagenGeneration(prompt, genAI) || await generateWithGeminiText(prompt, genAI)
+    return await tryImagenGeneration(prompt, size, quality, genAI) || await generateWithGeminiText(prompt, size, quality, genAI)
     
   } catch (error) {
     console.error('❌ Gemini image generation error:', error)
     
     // Generate enhanced SVG placeholder as final fallback
-    const fallbackUrl = generateEnhancedPlaceholder(prompt, '1024x1024')
+    const fallbackUrl = generateEnhancedPlaceholder(prompt, size)
     return {
       success: true,
       data: {
@@ -40,7 +45,12 @@ export async function generateImage(prompt: string) {
 }
 
 // Try Gemini 2.5 Flash Image for actual image generation
-async function tryImagenGeneration(prompt: string, genAI: any) {
+async function tryImagenGeneration(
+  prompt: string, 
+  size: string, 
+  quality: string, 
+  genAI: GoogleGenerativeAI
+): Promise<GeminiGenerationResult | null> {
   try {
     console.log('🔍 Attempting Gemini 2.5 Flash Image generation...')
     
@@ -108,14 +118,19 @@ async function tryImagenGeneration(prompt: string, genAI: any) {
     
     return null // No image generated, try next method
     
-  } catch (error) {
+  } catch {
     console.log('💡 Imagen API not available, trying Gemini text generation...')
     return null // Fall back to next method
   }
 }
 
 // Use Gemini for text description and generate enhanced SVG
-async function generateWithGeminiText(prompt: string, genAI: any) {
+async function generateWithGeminiText(
+  prompt: string, 
+  size: string, 
+  quality: string, 
+  genAI: GoogleGenerativeAI
+): Promise<GeminiGenerationResult> {
   try {
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash-exp',
@@ -145,7 +160,7 @@ Keep response under 300 words, focused on visual details an artist would need.`
     console.log('✅ Received description from Gemini:', description.substring(0, 200) + '...')
     
     // Generate enhanced SVG based on the description and original prompt
-    const enhancedSvg = generateEnhancedPlaceholder(prompt, '1024x1024', description)
+    const enhancedSvg = generateEnhancedPlaceholder(prompt, size, description)
     const thumbnailSvg = generateEnhancedPlaceholder(prompt, '512x512', description)
     
     return {
@@ -168,7 +183,7 @@ Keep response under 300 words, focused on visual details an artist would need.`
     console.error('❌ Gemini text generation error:', error)
     
     // Fallback to basic enhanced SVG
-    const fallbackUrl = generateEnhancedPlaceholder(prompt, '1024x1024')
+    const fallbackUrl = generateEnhancedPlaceholder(prompt, size)
     return {
       success: true,
       data: {
@@ -220,14 +235,14 @@ function generateEnhancedPlaceholder(prompt: string, size: string = '1024x1024',
   // Generate pattern based on prompt
   let pattern = ''
   if (promptLower.includes('stars') || promptLower.includes('night') || promptLower.includes('space')) {
-    pattern = Array.from({length: 50}, (_, i) => {
+    pattern = Array.from({length: 50}, () => {
       const x = Math.random() * width
       const y = Math.random() * height
       const size = Math.random() * 3 + 1
       return `<circle cx="${x}" cy="${y}" r="${size}" fill="rgba(255,255,255,0.8)" opacity="${Math.random() * 0.5 + 0.3}"/>`
     }).join('')
   } else if (promptLower.includes('flower') || promptLower.includes('garden')) {
-    pattern = Array.from({length: 20}, (_, i) => {
+    pattern = Array.from({length: 20}, () => {
       const x = Math.random() * width
       const y = Math.random() * height
       const size = Math.random() * 20 + 10

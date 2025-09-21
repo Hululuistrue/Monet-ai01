@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateImage } from '@/lib/gemini'
 import { supabase } from '@/lib/supabase'
 import { validatePrompt, generateId } from '@/utils/helpers'
-import { isRateLimited, incrementRateLimit, getGuestLimits } from '@/utils/rateLimit'
-import { GenerationRequest } from '@/types'
+import { isRateLimited, incrementRateLimit, getPlanLimits } from '@/utils/rateLimit'
+import { getClientIP, generateGuestIdentifier } from '@/utils/deviceFingerprint'
+import { checkSubscriptionLimits, updateUsageCount, getUserSubscriptionInfo } from '@/lib/subscription'
+import { GenerationRequest, GeminiGenerationResult } from '@/types'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -49,51 +51,95 @@ export async function POST(request: NextRequest) {
       }, { status: 400 }) // 400 Bad Request
     }
 
-    // Get user info or use headers for rate limiting
+    // Get user info and determine plan type
     const authHeader = request.headers.get('authorization')
+    const clientIP = getClientIP(request)
+    const deviceFingerprint = request.headers.get('x-device-fingerprint') || 'unknown'
+    
     let userId: string | null = null
-    let identifier = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    let identifier = clientIP
+    let userPlan = 'guest'
+    let planLimits = getPlanLimits('guest')
 
     if (authHeader) {
       const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
       if (user) {
         userId = user.id
         identifier = user.id
+        
+        // Get user's subscription info
+        const subscriptionInfo = await getUserSubscriptionInfo(userId)
+        userPlan = subscriptionInfo.planName
+        planLimits = getPlanLimits(userPlan)
+        
+        // Check email verification for free plan
+        if (userPlan === 'free' && !user.email_confirmed_at) {
+          return NextResponse.json({
+            success: false,
+            error: 'Please verify your email address to use the free plan features.',
+            errorCode: 'EMAIL_NOT_VERIFIED'
+          }, { status: 403 })
+        }
+      }
+    } else {
+      // Guest user - use device fingerprint + IP for identification
+      identifier = generateGuestIdentifier(deviceFingerprint, clientIP)
+    }
+
+    // Check batch size limits
+    if (n > planLimits.maxBatchSize) {
+      return NextResponse.json({
+        success: false,
+        error: `Batch size of ${n} exceeds your plan limit of ${planLimits.maxBatchSize}. ${userPlan === 'guest' ? 'Please sign up for higher limits.' : 'Upgrade your subscription for larger batches.'}`,
+        errorCode: 'BATCH_SIZE_EXCEEDED'
+      }, { status: 400 })
+    }
+
+    // Check rate limits for registered users
+    if (userId) {
+      const limitCheck = await checkSubscriptionLimits(userId, n)
+      if (!limitCheck.allowed) {
+        return NextResponse.json({
+          success: false,
+          error: limitCheck.error,
+          errorCode: limitCheck.errorCode
+        }, { status: 429 })
+      }
+    } else {
+      // Check rate limits for guests using simple in-memory tracking
+      if (isRateLimited(identifier, planLimits.hourly)) {
+        return NextResponse.json({
+          success: false,
+          error: `Hourly limit of ${planLimits.hourly} generations exceeded. Please sign up for higher limits.`,
+          errorCode: 'GUEST_RATE_LIMITED'
+        }, { status: 429 })
       }
     }
 
-    // Check rate limits
-    const limits = getGuestLimits()
-    if (isRateLimited(identifier, limits.hourly)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Rate limit exceeded. Please try again later.'
-      }, { status: 429 }) // 429 Too Many Requests
-    }
-
-    // Generate image(s) using Gemini API - handle batch generation
-    const results: any[] = []
+    // Generate image(s) using Gemini API with quality control
+    const effectiveQuality = planLimits.quality || 'standard'
+    const results: GeminiGenerationResult[] = []
     
     if (n === 1) {
-      // Single image generation
-      const result = await generateImage(prompt)
+      // Single image generation with plan-specific quality
+      const result = await generateImage(prompt, size, effectiveQuality)
       if (!result.success) {
         return NextResponse.json({
           success: false,
-          error: (result as any).error || 'Failed to generate image'
+          error: result.error || 'Failed to generate image'
         }, { status: 500 })
       }
       results.push(result)
     } else {
-      // Batch generation - make multiple concurrent calls
-      const batchPromises = Array(n).fill(null).map(() => generateImage(prompt))
+      // Batch generation - make multiple concurrent calls with quality control
+      const batchPromises = Array(n).fill(null).map(() => generateImage(prompt, size, effectiveQuality))
       const batchResults = await Promise.allSettled(batchPromises)
       
       for (const result of batchResults) {
         if (result.status === 'fulfilled' && result.value.success) {
           results.push(result.value)
         } else {
-          console.error('Batch generation error:', result.status === 'rejected' ? result.reason : (result.value as any)?.error)
+          console.error('Batch generation error:', result.status === 'rejected' ? result.reason : result.value.error)
           // Add a failed result with placeholder
           results.push({
             success: true,
@@ -120,17 +166,27 @@ export async function POST(request: NextRequest) {
 
     // Increment rate limit
     incrementRateLimit(identifier)
+    
+    // Update usage count for registered users
+    if (userId) {
+      await updateUsageCount(userId)
+    }
 
-    // Prepare images data for response and database
-    const imagesData = results.map((result) => ({
-      id: generateId(),
-      url: result.data.imageUrl,
-      thumbnail: result.data.thumbnailUrl,
-      size,
-      created_at: new Date().toISOString(),
-      source: result.data.source,
-      notice: result.data.notice
-    }))
+    // Prepare images data for response with download limits applied
+    const imagesData = results.map((result, index) => {
+      const canDownload = index < planLimits.maxDownloads
+      return {
+        id: generateId(),
+        url: result.data?.imageUrl || '',
+        thumbnail: result.data?.thumbnailUrl || '',
+        size,
+        created_at: new Date().toISOString(),
+        source: result.data?.source || 'unknown',
+        notice: result.data?.notice,
+        downloadable: canDownload,
+        downloadLimitMessage: !canDownload ? `Download limit: ${planLimits.maxDownloads} images per generation for ${userPlan} plan` : undefined
+      }
+    })
 
     // Save to database if user is authenticated
     if (userId && results.length > 0) {
@@ -167,6 +223,12 @@ export async function POST(request: NextRequest) {
         usage: {
           tokens: totalTokens,
           cost: totalCost
+        },
+        plan: {
+          type: userPlan,
+          maxDownloads: planLimits.maxDownloads,
+          quality: planLimits.quality,
+          queuePriority: planLimits.queuePriority
         }
       }
     })

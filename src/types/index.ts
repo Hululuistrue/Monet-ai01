@@ -39,3 +39,23 @@ export interface RateLimit {
   count: number
   resetTime: number
 }
+
+export interface GeminiGenerationResult {
+  success: boolean
+  data?: {
+    imageUrl: string
+    thumbnailUrl: string
+    enhancedPrompt: string
+    originalPrompt: string
+    fallback?: boolean
+    source?: string
+    error?: string
+    notice?: string
+    mimeType?: string
+  }
+  usage: {
+    tokens: number
+    cost: number
+  }
+  error?: string
+}
