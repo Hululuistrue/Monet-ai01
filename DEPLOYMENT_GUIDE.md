@@ -98,15 +98,15 @@ STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 NEXTAUTH_SECRET=your_nextauth_secret
 
-# Creem Payment Configuration (New!)
-CREEM_API_KEY=your_creem_api_key
-CREEM_WEBHOOK_SECRET=your_creem_webhook_secret
+# Creem Payment Configuration (已测试可用!)
+CREEM_API_KEY=creem_test_nRyQoEFDBfi6hxgDAs5u3
+CREEM_WEBHOOK_SECRET=whsec_4k4omxtGanE3UyyVLk3pUY
 CREEM_ENV=test
 CREEM_API_URL=https://test-api.creem.io
-CREEM_PRODUCT_ID_BASIC_MONTHLY=your_basic_monthly_product_id
-CREEM_PRODUCT_ID_PRO_MONTHLY=your_pro_monthly_product_id
-CREEM_PRODUCT_ID_BASIC_YEARLY=your_basic_yearly_product_id
-CREEM_PRODUCT_ID_PRO_YEARLY=your_pro_yearly_product_id
+CREEM_PRODUCT_ID_BASIC_MONTHLY=prod_68RCCpPV7pDrpiWprfnyJh
+CREEM_PRODUCT_ID_PRO_MONTHLY=prod_2SA5XwDRuBe2IymM9hrWlh
+CREEM_PRODUCT_ID_BASIC_YEARLY=prod_basic_yearly_placeholder
+CREEM_PRODUCT_ID_PRO_YEARLY=prod_pro_yearly_placeholder
 ```
 
 ### ⚠️ 重要：Google AI API Key 配置
