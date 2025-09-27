@@ -88,6 +88,13 @@ export default function ImageGenerator() {
   const handleGenerate = async () => {
     if (!prompt.trim()) return
     
+    // 检查用户是否已登录
+    if (!user || !authToken) {
+      setShowAuthModal(true)
+      setError('请先登录账户才能生成图片。只有注册用户才能使用图片生成功能。')
+      return
+    }
+    
     setLoading(true)
     setError(null)
     setGenerationInfo(null)
@@ -95,11 +102,8 @@ export default function ImageGenerator() {
     try {
       const headers: any = {
         'Content-Type': 'application/json',
-        'X-Device-Fingerprint': generateDeviceFingerprint()
-      }
-      
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`
+        'X-Device-Fingerprint': generateDeviceFingerprint(),
+        'Authorization': `Bearer ${authToken}`
       }
       
       const response = await fetch('/api/generate', {

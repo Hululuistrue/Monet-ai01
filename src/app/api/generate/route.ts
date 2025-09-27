@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateImage } from '@/lib/gemini'
 import { supabase } from '@/lib/supabase'
 import { validatePrompt, generateId } from '@/utils/helpers'
-import { isRateLimited, incrementRateLimit, getPlanLimits } from '@/utils/rateLimit'
-import { getClientIP, generateGuestIdentifier } from '@/utils/deviceFingerprint'
+import { getPlanLimits } from '@/utils/rateLimit'
 import { checkSubscriptionLimits, updateUsageCount, getUserSubscriptionInfo } from '@/lib/subscription'
 import { GenerationRequest, GeminiGenerationResult } from '@/types'
 
@@ -51,69 +50,60 @@ export async function POST(request: NextRequest) {
       }, { status: 400 }) // 400 Bad Request
     }
 
-    // Get user info and determine plan type
+    // 检查用户认证 - 只允许注册用户生成图片
     const authHeader = request.headers.get('authorization')
-    const clientIP = getClientIP(request)
-    const deviceFingerprint = request.headers.get('x-device-fingerprint') || 'unknown'
     
-    let userId: string | null = null
-    let identifier = clientIP
-    let userPlan = 'guest'
-    let planLimits = getPlanLimits('guest')
+    if (!authHeader) {
+      return NextResponse.json({
+        success: false,
+        error: '请先登录账户。图片生成功能仅对注册用户开放。',
+        errorCode: 'LOGIN_REQUIRED'
+      }, { status: 401 })
+    }
 
-    if (authHeader) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
-      if (user) {
-        userId = user.id
-        identifier = user.id
-        
-        // Get user's subscription info
-        const subscriptionInfo = await getUserSubscriptionInfo(userId)
-        userPlan = subscriptionInfo.planName
-        planLimits = getPlanLimits(userPlan)
-        
-        // Check email verification for free plan
-        if (userPlan === 'free' && !user.email_confirmed_at) {
-          return NextResponse.json({
-            success: false,
-            error: 'Please verify your email address to use the free plan features.',
-            errorCode: 'EMAIL_NOT_VERIFIED'
-          }, { status: 403 })
-        }
-      }
-    } else {
-      // Guest user - use device fingerprint + IP for identification
-      identifier = generateGuestIdentifier(deviceFingerprint, clientIP)
+    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    if (!user) {
+      return NextResponse.json({
+        success: false,
+        error: '无效的登录状态，请重新登录。',
+        errorCode: 'INVALID_TOKEN'
+      }, { status: 401 })
+    }
+
+    const userId = user.id
+    const identifier = user.id
+    
+    // Get user's subscription info
+    const subscriptionInfo = await getUserSubscriptionInfo(userId)
+    const userPlan = subscriptionInfo.planName
+    const planLimits = getPlanLimits(userPlan)
+    
+    // Check email verification for free plan
+    if (userPlan === 'free' && !user.email_confirmed_at) {
+      return NextResponse.json({
+        success: false,
+        error: 'Please verify your email address to use the free plan features.',
+        errorCode: 'EMAIL_NOT_VERIFIED'
+      }, { status: 403 })
     }
 
     // Check batch size limits
     if (n > planLimits.maxBatchSize) {
       return NextResponse.json({
         success: false,
-        error: `Batch size of ${n} exceeds your plan limit of ${planLimits.maxBatchSize}. ${userPlan === 'guest' ? 'Please sign up for higher limits.' : 'Upgrade your subscription for larger batches.'}`,
+        error: `Batch size of ${n} exceeds your plan limit of ${planLimits.maxBatchSize}. Upgrade your subscription for larger batches.`,
         errorCode: 'BATCH_SIZE_EXCEEDED'
       }, { status: 400 })
     }
 
     // Check rate limits for registered users
-    if (userId) {
-      const limitCheck = await checkSubscriptionLimits(userId, n)
-      if (!limitCheck.allowed) {
-        return NextResponse.json({
-          success: false,
-          error: limitCheck.error,
-          errorCode: limitCheck.errorCode
-        }, { status: 429 })
-      }
-    } else {
-      // Check rate limits for guests using simple in-memory tracking
-      if (isRateLimited(identifier, planLimits.hourly)) {
-        return NextResponse.json({
-          success: false,
-          error: `Hourly limit of ${planLimits.hourly} generations exceeded. Please sign up for higher limits.`,
-          errorCode: 'GUEST_RATE_LIMITED'
-        }, { status: 429 })
-      }
+    const limitCheck = await checkSubscriptionLimits(userId, n)
+    if (!limitCheck.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: limitCheck.error,
+        errorCode: limitCheck.errorCode
+      }, { status: 429 })
     }
 
     // Generate image(s) using Gemini API with quality control
@@ -164,13 +154,8 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Increment rate limit
-    incrementRateLimit(identifier)
-    
     // Update usage count for registered users
-    if (userId) {
-      await updateUsageCount(userId)
-    }
+    await updateUsageCount(userId)
 
     // Prepare images data for response with download limits applied
     const imagesData = results.map((result, index) => {
@@ -188,8 +173,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Save to database if user is authenticated
-    if (userId && results.length > 0) {
+    // Save to database for authenticated users
+    if (results.length > 0) {
       const dbRecords = imagesData.map((image, index) => ({
         id: image.id,
         user_id: userId,
